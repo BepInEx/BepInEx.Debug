@@ -35,6 +35,10 @@
       <HintPath>..\..\libs\bepinex4\BepInEx.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ConfigurationManager">
+      <HintPath>..\..\libs\bepinex4\ConfigurationManager.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>..\..\libs\bepinex4\Mono.Cecil.dll</HintPath>
       <Private>False</Private>

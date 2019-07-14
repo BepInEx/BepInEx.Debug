@@ -17,43 +17,52 @@ namespace ScriptEngine
 
         public string ScriptDirectory => Path.Combine(Paths.PluginPath, "scripts");
 
-        private GameObject scriptManager = new GameObject();
+        GameObject scriptManager;
+
+        ConfigWrapper<bool> LoadOnStart { get; set; }
+        SavedKeyboardShortcut ReloadKey { get; set; }
 
         void Awake()
         {
-            ReloadPlugins();
+            LoadOnStart = new ConfigWrapper<bool>("LoadOnStart", this, true);
+            ReloadKey = new SavedKeyboardShortcut("ReloadKey", this, new KeyboardShortcut(KeyCode.RightAlt));
+
+            if(LoadOnStart.Value)
+                ReloadPlugins();
         }
 
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Delete) && Event.current.control)
-            {
+            if(ReloadKey.IsDown())
                 ReloadPlugins();
-            }
         }
 
         void ReloadPlugins()
         {
             Destroy(scriptManager);
-
-            scriptManager = new GameObject();
-
+            scriptManager = new GameObject($"ScriptEngine_{DateTime.Now.Ticks}");
             DontDestroyOnLoad(scriptManager);
 
-            foreach (string path in Directory.GetFiles(ScriptDirectory, "*.dll"))
+            var files = Directory.GetFiles(ScriptDirectory, "*.dll");
+            if(files.Length > 0)
             {
-                LoadDLL(path, scriptManager);
-            }
+                foreach(string path in Directory.GetFiles(ScriptDirectory, "*.dll"))
+                    LoadDLL(path, scriptManager);
 
-	        Logger.Log(LogLevel.Message, "Reloaded script plugins!");
+                Logger.Log(LogLevel.Message, "Reloaded script plugins!");
+            }
+            else
+            {
+                Logger.Log(LogLevel.Message, "No plugins to reload");
+            }
         }
 
-        private void LoadDLL(string path, GameObject obj)
+        void LoadDLL(string path, GameObject obj)
         {
             var defaultResolver = new DefaultAssemblyResolver();
             defaultResolver.AddSearchDirectory(ScriptDirectory);
-	        defaultResolver.AddSearchDirectory(Paths.ManagedPath);
-            
+            defaultResolver.AddSearchDirectory(Paths.ManagedPath);
+
             AssemblyDefinition dll = AssemblyDefinition.ReadAssembly(path, new ReaderParameters
             {
                 AssemblyResolver = defaultResolver
@@ -61,17 +70,15 @@ namespace ScriptEngine
 
             dll.Name.Name = $"{dll.Name.Name}-{DateTime.Now.Ticks}";
 
-            using (var ms = new MemoryStream())
+            using(var ms = new MemoryStream())
             {
                 dll.Write(ms);
                 var assembly = Assembly.Load(ms.ToArray());
 
-                foreach (Type t in assembly.GetTypes())
+                foreach(Type type in assembly.GetTypes())
                 {
-                    if (typeof(BaseUnityPlugin).IsAssignableFrom(t))
-                    {
-                        obj.AddComponent(t);
-                    }
+                    if(typeof(BaseUnityPlugin).IsAssignableFrom(type))
+                        obj.AddComponent(type);
                 }
             }
         }
