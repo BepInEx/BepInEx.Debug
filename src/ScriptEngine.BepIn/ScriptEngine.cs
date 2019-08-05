@@ -63,7 +63,7 @@ namespace ScriptEngine
             defaultResolver.AddSearchDirectory(ScriptDirectory);
             defaultResolver.AddSearchDirectory(Paths.ManagedPath);
 
-            using(AssemblyDefinition dll = AssemblyDefinition.ReadAssembly(path, new ReaderParameters { AssemblyResolver = defaultResolver }))
+            using(var dll = AssemblyDefinition.ReadAssembly(path, new ReaderParameters { AssemblyResolver = defaultResolver }))
             {
                 dll.Name.Name = $"{dll.Name.Name}-{DateTime.Now.Ticks}";
 
