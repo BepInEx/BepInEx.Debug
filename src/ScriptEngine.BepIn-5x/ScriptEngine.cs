@@ -29,7 +29,7 @@ namespace ScriptEngine
         void Awake()
         {
             LoadOnStart = Config.Wrap("General", "LoadOnStart", "Load all plugins from the scripts folder when starting the application", false);
-            ReloadKey = Config.Wrap("General", "ReloadKey", "Press this key to reload all the plugins from the scripts folder", "RightAlt");
+            ReloadKey = Config.Wrap("General", "ReloadKey", "Press this key to reload all the plugins from the scripts folder", KeyCode.F6.ToString());
             reloadKey = (KeyCode)Enum.Parse(typeof(KeyCode), ReloadKey.Value, true);
 
             if(LoadOnStart.Value)

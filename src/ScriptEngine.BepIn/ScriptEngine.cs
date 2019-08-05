@@ -24,8 +24,8 @@ namespace ScriptEngine
 
         void Awake()
         {
-            LoadOnStart = new ConfigWrapper<bool>("LoadOnStart", this, true);
-            ReloadKey = new SavedKeyboardShortcut("ReloadKey", this, new KeyboardShortcut(KeyCode.RightAlt));
+            LoadOnStart = new ConfigWrapper<bool>("LoadOnStart", this, false);
+            ReloadKey = new SavedKeyboardShortcut("ReloadKey", this, new KeyboardShortcut(KeyCode.F6));
 
             if(LoadOnStart.Value)
                 ReloadPlugins();
@@ -63,22 +63,20 @@ namespace ScriptEngine
             defaultResolver.AddSearchDirectory(ScriptDirectory);
             defaultResolver.AddSearchDirectory(Paths.ManagedPath);
 
-            AssemblyDefinition dll = AssemblyDefinition.ReadAssembly(path, new ReaderParameters
+            using(AssemblyDefinition dll = AssemblyDefinition.ReadAssembly(path, new ReaderParameters { AssemblyResolver = defaultResolver }))
             {
-                AssemblyResolver = defaultResolver
-            });
+                dll.Name.Name = $"{dll.Name.Name}-{DateTime.Now.Ticks}";
 
-            dll.Name.Name = $"{dll.Name.Name}-{DateTime.Now.Ticks}";
-
-            using(var ms = new MemoryStream())
-            {
-                dll.Write(ms);
-                var assembly = Assembly.Load(ms.ToArray());
-
-                foreach(Type type in assembly.GetTypes())
+                using(var ms = new MemoryStream())
                 {
-                    if(typeof(BaseUnityPlugin).IsAssignableFrom(type))
-                        obj.AddComponent(type);
+                    dll.Write(ms);
+                    var assembly = Assembly.Load(ms.ToArray());
+
+                    foreach(Type type in assembly.GetTypes())
+                    {
+                        if(typeof(BaseUnityPlugin).IsAssignableFrom(type))
+                            obj.AddComponent(type);
+                    }
                 }
             }
         }
