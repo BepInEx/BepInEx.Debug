@@ -1,8 +1,10 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Logging;
 using Mono.Cecil;
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using Logger = BepInEx.Logger;
@@ -18,6 +20,7 @@ namespace ScriptEngine
         public string ScriptDirectory => Path.Combine(Paths.PluginPath, "scripts");
 
         GameObject scriptManager;
+        string processName;
 
         ConfigWrapper<bool> LoadOnStart { get; set; }
         SavedKeyboardShortcut ReloadKey { get; set; }
@@ -27,6 +30,8 @@ namespace ScriptEngine
             LoadOnStart = new ConfigWrapper<bool>("LoadOnStart", this, false);
             ReloadKey = new SavedKeyboardShortcut("ReloadKey", this, new KeyboardShortcut(KeyCode.F6));
 
+            processName = Process.GetCurrentProcess().ProcessName.ToLower();
+            
             if(LoadOnStart.Value)
                 ReloadPlugins();
         }
@@ -74,8 +79,15 @@ namespace ScriptEngine
 
                     foreach(Type type in assembly.GetTypes())
                     {
-                        if(typeof(BaseUnityPlugin).IsAssignableFrom(type))
-                            obj.AddComponent(type);
+                        if (typeof(BaseUnityPlugin).IsAssignableFrom(type))
+                        {
+                            if (type.GetCustomAttributes(typeof(BepInProcess), true)
+                                .Cast<BepInProcess>()
+                                .Any(x => x.ProcessName.ToLower().Replace(".exe", "") == processName))
+                            {
+                                obj.AddComponent(type);
+                            }
+                        }
                     }
                 }
             }
