@@ -81,9 +81,8 @@ namespace ScriptEngine
                     {
                         if (typeof(BaseUnityPlugin).IsAssignableFrom(type))
                         {
-                            if (type.GetCustomAttributes(typeof(BepInProcess), true)
-                                .Cast<BepInProcess>()
-                                .Any(x => x.ProcessName.ToLower().Replace(".exe", "") == processName))
+                            var ps = type.GetCustomAttributes(typeof(BepInProcess), true).Cast<BepInProcess>().ToList();
+                            if (!ps.Any() || ps.Any(x => x.ProcessName.ToLower().Replace(".exe", "") == processName))
                             {
                                 obj.AddComponent(type);
                             }
