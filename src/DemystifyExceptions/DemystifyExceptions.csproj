@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{679F65CB-10E1-4858-84D5-78D7A993FACD}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DemystifyExceptions</RootNamespace>
+    <AssemblyName>DemystifyExceptions</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;APKD_STACKTRACE_NOCACHE;APKD_STACKTRACE_FULLPARAMS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\bin\</OutputPath>
+    <DefineConstants>TRACE;APKD_STACKTRACE_NOCACHE;APKD_STACKTRACE_LAMBDAORDINALS </DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Mono.Cecil, Version=0.10.3.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MonoMod.RuntimeDetour">
+      <HintPath>..\..\libs\bepinex5\MonoMod.RuntimeDetour.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DemystifyPatcher.cs" />
+    <Compile Include="Demystify\CacheDictionary.cs" />
+    <Compile Include="Demystify\EnhancedStackFrame.cs" />
+    <Compile Include="Demystify\EnhancedStackTrace.cs" />
+    <Compile Include="Demystify\EnhancedStackTrace.Frames.cs" />
+    <Compile Include="Demystify\Enumerable\EnumerableIList.cs" />
+    <Compile Include="Demystify\Enumerable\EnumeratorIList.cs" />
+    <Compile Include="Demystify\Enumerable\IEnumerableIList.cs" />
+    <Compile Include="Demystify\ExceptionExtensions.cs" />
+    <Compile Include="Demystify\Extensions.cs" />
+    <Compile Include="Demystify\Internal\ILReader.cs" />
+    <Compile Include="Demystify\Internal\ReflectionHelper.cs" />
+    <Compile Include="Demystify\Internal\StringBuilder.cs" />
+    <Compile Include="Demystify\ResolvedMethod.cs" />
+    <Compile Include="Demystify\ResolvedParameter.cs" />
+    <Compile Include="Demystify\StringBuilderExtensions.cs" />
+    <Compile Include="Demystify\TypeNameHelper.cs" />
+    <Compile Include="Demystify\ValueTupleResolvedParameter.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

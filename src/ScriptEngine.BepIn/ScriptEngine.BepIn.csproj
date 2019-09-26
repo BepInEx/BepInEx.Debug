@@ -37,7 +37,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="ConfigurationManager">
-      <HintPath>..\..\libs\bepinex4\ConfigurationManager.dll</HintPath>
+      <HintPath>..\..\libs\ConfigurationManager.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil">
