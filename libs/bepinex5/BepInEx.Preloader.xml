@@ -87,9 +87,9 @@
                 The main patcher method that is called on every DLL defined in <see cref="P:BepInEx.Preloader.Patching.PatcherPlugin.TargetDLLs" />.
             </summary>
         </member>
-        <member name="P:BepInEx.Preloader.Patching.PatcherPlugin.Name">
+        <member name="P:BepInEx.Preloader.Patching.PatcherPlugin.TypeName">
             <summary>
-                Name of the patcher.
+                Type name of the patcher.
             </summary>
         </member>
         <member name="M:BepInEx.Preloader.Entrypoint.Main(System.String[])">

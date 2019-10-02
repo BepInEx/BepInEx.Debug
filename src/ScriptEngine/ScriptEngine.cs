@@ -15,22 +15,20 @@ namespace ScriptEngine
     [BepInPlugin(GUID, "Script Engine", Version)]
     public class ScriptEngine : BaseUnityPlugin
     {
-        public const string GUID = "com.bepis.bepinex.scriptengine.bepin5";
-        public const string Version = "1.0.0";
+        public const string GUID = "com.bepis.bepinex.scriptengine";
+        public const string Version = "1.0.1";
 
         public string ScriptDirectory => Path.Combine(Paths.BepInExRootPath, "scripts");
 
         GameObject scriptManager;
-        KeyCode reloadKey;
 
-        ConfigWrapper<bool> LoadOnStart { get; set; }
-        ConfigWrapper<string> ReloadKey { get; set; }
+        ConfigEntry<bool> LoadOnStart { get; set; }
+        ConfigEntry<KeyboardShortcut> ReloadKey { get; set; }
 
         void Awake()
         {
-            LoadOnStart = Config.Wrap("General", "LoadOnStart", "Load all plugins from the scripts folder when starting the application", false);
-            ReloadKey = Config.Wrap("General", "ReloadKey", "Press this key to reload all the plugins from the scripts folder", KeyCode.F6.ToString());
-            reloadKey = (KeyCode)Enum.Parse(typeof(KeyCode), ReloadKey.Value, true);
+            LoadOnStart = Config.AddSetting("General", "LoadOnStart", false, new ConfigDescription("Load all plugins from the scripts folder when starting the application"));
+            ReloadKey = Config.AddSetting("General", "ReloadKey", new KeyboardShortcut(KeyCode.F6), new ConfigDescription("Press this key to reload all the plugins from the scripts folder"));
 
             if(LoadOnStart.Value)
                 ReloadPlugins();
@@ -38,7 +36,7 @@ namespace ScriptEngine
 
         void Update()
         {
-            if(Input.GetKeyDown(reloadKey))
+            if(ReloadKey.Value.IsDown())
                 ReloadPlugins();
         }
 
