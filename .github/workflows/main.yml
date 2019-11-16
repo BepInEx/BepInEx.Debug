@@ -1,0 +1,26 @@
+name: Master Builds
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@master
+    - name: Setup Nuget.exe
+      uses: warrenbuckley/Setup-Nuget@v1
+    - name: Setup MSBuild.exe
+      uses: warrenbuckley/Setup-MSBuild@v1
+    - name: Restore
+      working-directory: .
+      run: nuget restore
+    - name: MSBuild
+      working-directory: .
+      run: msbuild /t:Build /p:Configuration=Release BepInEx.Debug.sln
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: BepInEx.Debug
+        path: bin
