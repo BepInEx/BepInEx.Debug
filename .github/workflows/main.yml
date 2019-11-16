@@ -18,4 +18,9 @@ jobs:
       run: nuget restore
     - name: MSBuild
       working-directory: .
-      run: msbuild BepInEx.Debug.sln
+      run: msbuild /t:Build /p:Configuration=Release BepInEx.Debug.sln
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: artifacts
+        path: bin
