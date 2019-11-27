@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptEngine", "src\ScriptE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemystifyExceptions", "src\DemystifyExceptions\DemystifyExceptions.csproj", "{679F65CB-10E1-4858-84D5-78D7A993FACD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StartupProfiler", "src\StartupProfiler\StartupProfiler.csproj", "{6081C5AE-AB5A-456B-A29F-3EEF9AD9EEDF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{679F65CB-10E1-4858-84D5-78D7A993FACD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{679F65CB-10E1-4858-84D5-78D7A993FACD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{679F65CB-10E1-4858-84D5-78D7A993FACD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6081C5AE-AB5A-456B-A29F-3EEF9AD9EEDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6081C5AE-AB5A-456B-A29F-3EEF9AD9EEDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6081C5AE-AB5A-456B-A29F-3EEF9AD9EEDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6081C5AE-AB5A-456B-A29F-3EEF9AD9EEDF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
