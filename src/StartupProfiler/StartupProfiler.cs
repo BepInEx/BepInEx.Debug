@@ -16,7 +16,7 @@ namespace StartupProfiler
         
         public static void Finish()
         {
-            Hooks.PatchHarmony();
+            Hooks.Patch();
         }
     }
 }
