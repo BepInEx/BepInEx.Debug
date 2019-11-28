@@ -17,8 +17,9 @@ namespace StartupProfiler
     {
         public static IEnumerable<string> TargetDLLs { get; } = new string[0];
 
-        private static ManualLogSource Logger;
+        private static ManualLogSource logger;
         private static Harmony harmony;
+        private static Stopwatch chainTimer;
 
         private static string[] unityMethods = new[] { "Awake", "Start", "Main" };
         private static readonly Dictionary<Type, KeyValuePair<BepInPlugin, Stopwatch>> timers = new Dictionary<Type, KeyValuePair<BepInPlugin, Stopwatch>>();
@@ -27,7 +28,7 @@ namespace StartupProfiler
 
         public static void Finish()
         {
-            Logger = BepInEx.Logging.Logger.CreateLogSource(nameof(StartupProfiler));
+            logger = BepInEx.Logging.Logger.CreateLogSource(nameof(StartupProfiler));
             harmony = new Harmony(nameof(StartupProfiler));
 
             harmony.Patch(typeof(Chainloader).GetMethod(nameof(Chainloader.Initialize)),
@@ -37,8 +38,15 @@ namespace StartupProfiler
         public static void ChainloaderHook()
         {
             harmony.Patch(typeof(Chainloader).GetMethod(nameof(Chainloader.Start)),
-                          transpiler: new HarmonyMethod(typeof(StartupProfiler).GetMethod(nameof(FindPluginTypes))),
-                          postfix: new HarmonyMethod(typeof(StartupProfiler).GetMethod(nameof(ChainloaderPost))));
+                          new HarmonyMethod(typeof(StartupProfiler).GetMethod(nameof(ChainloaderPre))),
+                          new HarmonyMethod(typeof(StartupProfiler).GetMethod(nameof(ChainloaderPost))),
+                          new HarmonyMethod(typeof(StartupProfiler).GetMethod(nameof(FindPluginTypes))));
+        }
+
+        public static void ChainloaderPre()
+        {
+            chainTimer = new Stopwatch();
+            chainTimer.Start();
         }
 
         public static IEnumerable<CodeInstruction> FindPluginTypes(IEnumerable<CodeInstruction> instructions)
@@ -86,6 +94,7 @@ namespace StartupProfiler
 
         public static void ChainloaderPost()
         {
+            chainTimer.Stop();
             ThreadingHelper.Instance.StartCoroutine(PrintResults());
         }
 
@@ -93,10 +102,11 @@ namespace StartupProfiler
         {
             yield return null;
 
-            Logger.LogInfo($"Total: {timers.Sum(x => x.Value.Value.ElapsedMilliseconds)} ms");
+            logger.LogInfo($"Chainloader total: {chainTimer.ElapsedMilliseconds} ms");
+            logger.LogInfo($"Plugins total: {timers.Sum(x => x.Value.Value.ElapsedMilliseconds)} ms");
 
             foreach(var timer in timers.OrderByDescending(x => x.Value.Value.ElapsedMilliseconds))
-                Logger.LogInfo($"{timer.Value.Key.GUID}: {timer.Value.Value.ElapsedMilliseconds} ms");
+                logger.LogInfo($"{timer.Value.Key.GUID}: {timer.Value.Value.ElapsedMilliseconds} ms");
 
             harmony.UnpatchAll();
         }
