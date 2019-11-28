@@ -21,14 +21,14 @@ namespace StartupProfiler
         private static Harmony harmony;
 
         private static string[] unityMethods = new[] { "Awake", "Start", "Main" };
-        private static readonly Dictionary<Type, Stopwatch> timers = new Dictionary<Type, Stopwatch>();
+        private static readonly Dictionary<Type, KeyValuePair<BepInPlugin, Stopwatch>> timers = new Dictionary<Type, KeyValuePair<BepInPlugin, Stopwatch>>();
 
         public static void Patch(AssemblyDefinition ass) { }
 
         public static void Finish()
         {
-            Logger = BepInEx.Logging.Logger.CreateLogSource("StartupProfiler");
-            harmony = new Harmony("StartupProfiler");
+            Logger = BepInEx.Logging.Logger.CreateLogSource(nameof(StartupProfiler));
+            harmony = new Harmony(nameof(StartupProfiler));
 
             harmony.Patch(typeof(Chainloader).GetMethod(nameof(Chainloader.Initialize)),
                           postfix: new HarmonyMethod(typeof(StartupProfiler).GetMethod(nameof(ChainloaderHook))));
@@ -54,7 +54,8 @@ namespace StartupProfiler
 
         public static Type PatchPlugin(Type type)
         {
-            timers[type] = new Stopwatch();
+            var bepInPlugin = (BepInPlugin)type.GetCustomAttributes(false).First(x => x.GetType() == typeof(BepInPlugin));
+            timers[type] = new KeyValuePair<BepInPlugin, Stopwatch>(bepInPlugin, new Stopwatch());
 
             foreach(var unityMethod in unityMethods)
             {
@@ -77,14 +78,14 @@ namespace StartupProfiler
         public static void StartTimer(object __instance)
         {
             if(timers.TryGetValue(__instance.GetType(), out var watch))
-                watch.Start();
+                watch.Value.Start();
         }
 
         public static MethodInfo StopTimerMethodInfo = typeof(StartupProfiler).GetMethod(nameof(StopTimer));
         public static void StopTimer(object __instance)
         {
             if(timers.TryGetValue(__instance.GetType(), out var watch))
-                watch.Stop();
+                watch.Value.Stop();
         }
 
         public static void ChainloaderPost()
@@ -96,8 +97,10 @@ namespace StartupProfiler
         {
             yield return null;
 
-            foreach(var timer in timers.OrderBy(x => x.Key.FullName))
-                Logger.LogInfo($"{timer.Key}: {timer.Value.ElapsedMilliseconds}");
+            Logger.LogInfo($"Total: {timers.Sum(x => x.Value.Value.ElapsedMilliseconds)} ms");
+
+            foreach(var timer in timers.OrderByDescending(x => x.Value.Value.ElapsedMilliseconds))
+                Logger.LogInfo($"{timer.Value.Key.GUID}: {timer.Value.Value.ElapsedMilliseconds} ms");
 
             harmony.UnpatchAll();
         }
