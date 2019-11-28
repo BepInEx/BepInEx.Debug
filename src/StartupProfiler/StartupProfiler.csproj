@@ -44,9 +44,13 @@
       <HintPath>..\..\libs\bepinex5\Mono.Cecil.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System" />
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\libs\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Hooks.cs" />
     <Compile Include="StartupProfiler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
