@@ -62,14 +62,10 @@ namespace StartupProfiler
                 var methodInfo = type.GetMethod(unityMethod, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
                 if(methodInfo == null) continue;
                 harmony.Patch(methodInfo, new HarmonyMethod(StartTimerMethodInfo), new HarmonyMethod(StopTimerMethodInfo));
-                Logger.LogInfo($"Patching method {methodInfo.Name} in type {type}");
             }
 
             foreach(var methodInfo in type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly))
-            {
                 harmony.Patch(methodInfo, new HarmonyMethod(StartTimerMethodInfo), new HarmonyMethod(StopTimerMethodInfo));
-                Logger.LogInfo($"Patching method {methodInfo.Name} in type {type}");
-            }
 
             return type;
         }
