@@ -21,4 +21,4 @@ Remember to clean up after the old plugin version in case you need to. Things li
 
 ## Startup Profiler
 Log and report the time spent in the `Start`, `Awake`, `Main`, `.ctor` and `.cctor` methods of each plugin.  
-Also reports the total time spent in plugins and the total time spent in chainloader so any performance improvements done through multithreading can be analyzed better.
+Also reports the total time spent in all plugins during these methods and the total time spent in chainloader so any performance improvements done through multithreading can be analyzed better.
