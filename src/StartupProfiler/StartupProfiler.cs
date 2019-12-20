@@ -28,7 +28,7 @@ namespace StartupProfiler
 
         public static void Finish()
         {
-            logger = BepInEx.Logging.Logger.CreateLogSource(nameof(StartupProfiler));
+            logger = Logger.CreateLogSource(nameof(StartupProfiler));
             harmony = new Harmony(nameof(StartupProfiler));
 
             harmony.Patch(typeof(Chainloader).GetMethod(nameof(Chainloader.Initialize)),
