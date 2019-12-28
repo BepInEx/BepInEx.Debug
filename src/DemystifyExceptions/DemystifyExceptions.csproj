@@ -33,9 +33,8 @@
     <LangVersion>7.1</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Mono.Cecil, Version=0.10.3.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Mono.Cecil.0.10.3\lib\net35\Mono.Cecil.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Mono.Cecil">
+      <HintPath>..\..\libs\bepinex5\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="MonoMod.RuntimeDetour">
       <HintPath>..\..\libs\bepinex5\MonoMod.RuntimeDetour.dll</HintPath>
@@ -64,9 +63,6 @@
     <Compile Include="Demystify\TypeNameHelper.cs" />
     <Compile Include="Demystify\ValueTupleResolvedParameter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

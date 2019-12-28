@@ -27,8 +27,8 @@ namespace ScriptEngine
 
         void Awake()
         {
-            LoadOnStart = Config.AddSetting("General", "LoadOnStart", false, new ConfigDescription("Load all plugins from the scripts folder when starting the application"));
-            ReloadKey = Config.AddSetting("General", "ReloadKey", new KeyboardShortcut(KeyCode.F6), new ConfigDescription("Press this key to reload all the plugins from the scripts folder"));
+            LoadOnStart = Config.Bind("General", "LoadOnStart", false, new ConfigDescription("Load all plugins from the scripts folder when starting the application"));
+            ReloadKey = Config.Bind("General", "ReloadKey", new KeyboardShortcut(KeyCode.F6), new ConfigDescription("Press this key to reload all the plugins from the scripts folder"));
 
             if(LoadOnStart.Value)
                 ReloadPlugins();
