@@ -35,6 +35,7 @@
   <ItemGroup>
     <Reference Include="Mono.Cecil">
       <HintPath>..\..\libs\bepinex5\Mono.Cecil.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MonoMod.RuntimeDetour">
       <HintPath>..\..\libs\bepinex5\MonoMod.RuntimeDetour.dll</HintPath>

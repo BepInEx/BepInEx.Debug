@@ -81,12 +81,15 @@ namespace ScriptEngine
                         if(typeof(BaseUnityPlugin).IsAssignableFrom(type))
                         {
                             var metadata = MetadataHelper.GetMetadata(type);
-                            var typeDefinition = dll.MainModule.Types.First(x => x.FullName == type.FullName);
-                            var typeInfo = Chainloader.ToPluginInfo(typeDefinition);
-                            Chainloader.PluginInfos[metadata.GUID] = typeInfo;
+                            if(metadata != null)
+                            {
+                                var typeDefinition = dll.MainModule.Types.First(x => x.FullName == type.FullName);
+                                var typeInfo = Chainloader.ToPluginInfo(typeDefinition);
+                                Chainloader.PluginInfos[metadata.GUID] = typeInfo;
 
-                            Logger.Log(LogLevel.Info, $"Reloading {metadata.GUID}");
-                            StartCoroutine(DelayAction(() => obj.AddComponent(type)));
+                                Logger.Log(LogLevel.Info, $"Reloading {metadata.GUID}");
+                                StartCoroutine(DelayAction(() => obj.AddComponent(type))); 
+                            }
                         }
                     }
                 }
