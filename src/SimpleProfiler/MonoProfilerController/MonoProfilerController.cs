@@ -19,7 +19,7 @@ namespace MonoProfiler
             if (!MonoProfilerPatcher.IsInitialized)
             {
                 enabled = false;
-                Logger.LogError("MonoProfiler was not initialized, can't proceed! Make sure that all profiler dlls are in the correct directories.");
+                Logger.LogWarning("MonoProfiler was not initialized, can't proceed! Make sure that all profiler dlls are in the correct directories.");
                 return;
             }
 
