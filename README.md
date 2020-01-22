@@ -18,6 +18,8 @@ A simple profiler that can be used in any Unity player build as long as it can r
 
 Check the config file or use ConfigurationManager to change the hotkey used to dump the collected profiler data (KeyCode.BackQuote by default). Dumps only include information that was captured since the last time a dump was triggered.
 
+You can use LibreOffice Calc or Excel to view the dumped .csv results. Using Calc as example, open the .csv and import it with default options, then select columns A B and C, and click Data/AutoFilter. You can now click the arrows in 1st row to filter and sort the results.
+
 **Warning:** The profiler always runs and will noticeably slow down the game. To turn the profiler off you have to close the game and rename MonoProfiler dll to something else like `_MonoProfiler32.dll`. You need the correct version of `MonoProfiler.dll` for your game (either 32 or 64 bit).
 
 ### ScriptEngine
