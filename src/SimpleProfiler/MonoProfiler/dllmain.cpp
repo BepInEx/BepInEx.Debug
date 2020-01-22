@@ -15,7 +15,7 @@ static void dump()
 	mut.lock();
 	std::ofstream fs;
 
-	fs.open("exampleOutput.csv", std::fstream::out);
+	fs.open("MonoProfilerOutput.csv", std::fstream::out | std::fstream::trunc);
 
 	std::vector<std::reference_wrapper<ProfilerInfo>> infos;
 	for (auto&[key, val] : profilerInfo)
