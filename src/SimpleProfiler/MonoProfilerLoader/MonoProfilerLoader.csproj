@@ -7,7 +7,7 @@
     <ProjectGuid>{A909BA1C-4C18-49CF-A4E8-60584B7F2200}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MonoProfilerLoader</RootNamespace>
+    <RootNamespace>MonoProfiler</RootNamespace>
     <AssemblyName>MonoProfilerLoader</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>..\..\..\libs\bepinex5\BepInEx.dll</HintPath>
+    </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>..\..\..\libs\bepinex5\Mono.Cecil.dll</HintPath>
       <Private>False</Private>
@@ -39,7 +42,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BepinProfilerPatcher.cs" />
+    <Compile Include="MonoProfilerPatcher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

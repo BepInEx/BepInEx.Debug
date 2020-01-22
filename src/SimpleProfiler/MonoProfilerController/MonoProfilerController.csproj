@@ -7,7 +7,7 @@
     <ProjectGuid>{E643A810-00A8-4B6F-83FC-B8631257EB43}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MonoProfilerController</RootNamespace>
+    <RootNamespace>MonoProfiler</RootNamespace>
     <AssemblyName>MonoProfilerController</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -40,8 +40,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="MonoProfilerController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MonoProfilerLoader\MonoProfilerLoader.csproj">
+      <Project>{a909ba1c-4c18-49cf-a4e8-60584b7f2200}</Project>
+      <Name>MonoProfilerLoader</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
