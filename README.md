@@ -14,11 +14,11 @@ Based on [Apkd.UnityDemystifier](https://github.com/apkd/Apkd.UnityDemystifier).
 ### Simple Mono Profiler
 A simple profiler that can be used in any Unity player build as long as it can run BepInEx 5.x. It can generate a .csv file with profiling results from an arbitrary length of time.
 
-**How to use:** To install simply extract the release archive into the game root directory (folder structure is important, MonoProfiler.dll needs to be right next to the game .exe and other dlls need to be inside BepInEx subfolders).
+**How to use:** To install simply extract the release archive into the game root directory (folder structure is important. MonoProfiler32/64.dll files need to be right next to the game .exe and other dlls need to be inside BepInEx subfolders). MonoProfiler32.dll and MonoProfiler64.dll can both be copied to the game directory and only the correct one will be loaded.
 
 Check the config file or use ConfigurationManager to change the hotkey used to dump the collected profiler data (KeyCode.BackQuote by default). Dumps only include information that was captured since the last time a dump was triggered.
 
-**Warning:** The profiler always runs and will noticeably slow down the game. To turn the profiler off you have to close the game and rename `MonoProfiler.dll` to something else like `_MonoProfiler.dll`.
+**Warning:** The profiler always runs and will noticeably slow down the game. To turn the profiler off you have to close the game and rename MonoProfiler dll to something else like `_MonoProfiler32.dll`. You need the correct version of `MonoProfiler.dll` for your game (either 32 or 64 bit).
 
 ### ScriptEngine
 Loads and reloads BepInEx plugins from the `BepInEx\scripts` folder. User can reload all of these plugins by pressing the keyboard shortcut defined in the config. Shortcut is F6 by default.  

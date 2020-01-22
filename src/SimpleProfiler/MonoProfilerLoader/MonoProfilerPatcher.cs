@@ -18,6 +18,7 @@ namespace MonoProfiler
 
         public static IEnumerable<string> TargetDLLs { get; } = new string[0];
 
+        private static bool Is64BitProcess => IntPtr.Size == 8;
         public static bool IsInitialized => _dumpFunction != null;
 
         public static FileInfo RunProfilerDump()
@@ -47,7 +48,13 @@ namespace MonoProfiler
                 }
 
                 // Load profiler lib, it checks for the dll in the game root next to the .exe first
-                var profilerPtr = LoadLibrary("MonoProfiler.dll");
+                var profilerPath = Path.GetFullPath(Path.Combine(Paths.GameRootPath, Is64BitProcess ? "MonoProfiler64.dll" : "MonoProfiler32.dll"));
+                if(!File.Exists(profilerPath))
+                {
+                    _logger.LogWarning("Could not find " + profilerPath);
+                    return;
+                }
+                var profilerPtr = LoadLibrary(profilerPath);
                 if (profilerPtr == IntPtr.Zero)
                 {
                     _logger.LogWarning("Failed to load MonoProfiler.dll, make sure that it exists in game root and try again");
@@ -73,7 +80,7 @@ namespace MonoProfiler
                 }
                 _dumpFunction = (Dump)Marshal.GetDelegateForFunctionPointer(dumpPtr, typeof(Dump));
 
-                _logger.LogDebug($"Load success! monoModule:{monoModule} profilerPtr:{profilerPtr} AddProfilerPtr:{addProfilerPtr} DumpPtr:{dumpPtr}");
+                _logger.LogDebug($"Loaded profiler from {profilerPath}"); // monoModule:{monoModule} profilerPtr:{profilerPtr} AddProfilerPtr:{addProfilerPtr} DumpPtr:{dumpPtr}
             }
             catch (Exception ex)
             {
