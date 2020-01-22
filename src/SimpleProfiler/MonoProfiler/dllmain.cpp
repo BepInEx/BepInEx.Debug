@@ -26,7 +26,7 @@ static void dump()
 		return a.totalRuntime.count() > b.totalRuntime.count();
 	});
 
-	fs << "\"Call count\"" << ",\"" << "\"Method name\"" << "\"," << "\"Total runtime (ns)\"" << std::endl;
+	fs << "\"Call count\",\"Method name\",\"Total runtime (ns)\"" << std::endl;
 
 	//Dump into csv
 	for (auto& it : infos)
@@ -45,7 +45,7 @@ static void dump()
 
 static void shutdown(void* prof)
 {
-	dump();
+	//dump();
 }
 
 static void method_enter(void* prof, void* method)
