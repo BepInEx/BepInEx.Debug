@@ -34,6 +34,7 @@ namespace MonoProfiler
                 var dumpFile = MonoProfilerPatcher.RunProfilerDump();
                 if(_uniqueNames.Value)
                     dumpFile.MoveTo(Path.Combine(dumpFile.DirectoryName, $"{Path.GetFileNameWithoutExtension(dumpFile.Name)}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}{dumpFile.Extension}"));
+                Logger.LogMessage("Saved profiler dump to " + dumpFile.FullName);
             }
         }
     }
