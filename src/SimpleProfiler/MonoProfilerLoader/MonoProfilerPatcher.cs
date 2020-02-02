@@ -51,13 +51,13 @@ namespace MonoProfiler
                 var profilerPath = Path.GetFullPath(Path.Combine(Paths.GameRootPath, Is64BitProcess ? "MonoProfiler64.dll" : "MonoProfiler32.dll"));
                 if(!File.Exists(profilerPath))
                 {
-                    _logger.LogWarning("Could not find " + profilerPath);
+                    _logger.LogError($"Could not find {profilerPath}");
                     return;
                 }
                 var profilerPtr = LoadLibrary(profilerPath);
                 if (profilerPtr == IntPtr.Zero)
                 {
-                    _logger.LogWarning("Failed to load MonoProfiler.dll, make sure that it exists in game root and try again");
+                    _logger.LogError($"Failed to load {profilerPath}, verify that the file exists and is not corrupted");
                     return;
                 }
 
