@@ -108,7 +108,7 @@ namespace StartupProfiler
             foreach(var timer in timers.OrderByDescending(x => x.Value.Value.ElapsedMilliseconds))
                 logger.LogInfo($"{timer.Value.Key.GUID}: {timer.Value.Value.ElapsedMilliseconds} ms");
 
-            harmony.UnpatchAll();
+            harmony.UnpatchAll(harmony.Id);
         }
     }
 }
