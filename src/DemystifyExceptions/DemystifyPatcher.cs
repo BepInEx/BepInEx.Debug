@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
 using DemystifyExceptions.Demystify;
 using HarmonyLib;
 using Mono.Cecil;
-using MonoMod.RuntimeDetour;
 
 namespace DemystifyExceptions
 {
