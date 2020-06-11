@@ -36,7 +36,7 @@ namespace DemystifyExceptions
         public static bool ExceptionToStringHook(Exception __instance, ref string __result)
         {
             __result = __instance.ToStringDemystified();
-            return true;
+            return false;
         }
 
         public static void Patch(AssemblyDefinition ad)
