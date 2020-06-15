@@ -31,7 +31,7 @@ namespace DemystifyExceptions
             }
         }
         
-        [HarmonyPatch(typeof(Exception), nameof(Exception.ToString))]
+        [HarmonyPatch(typeof(Exception), nameof(Exception.ToString), new Type[0])]
         [HarmonyPrefix]
         public static bool ExceptionToStringHook(Exception __instance, ref string __result)
         {
