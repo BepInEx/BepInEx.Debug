@@ -18,7 +18,8 @@ Preloader patch provides a public event one can listen to which will receive all
 
 Unlike output log, which can be disabled in the game, this redirect will always capture said debug logs.
 
-By default, logs are output to `unity_log.txt`. This is configurable via `RedirectInternalLogs.cfg` configuration file.
+**How to use:** This is a preloader patcher. Put the compiled DLL into `BepInEx/patchers`.  
+By default, logs are output to `unity_log.txt`. This is configurable via `RedirectInternalLogs.cfg` configuration file that gets generated on the first run.
 
 ### Simple Mono Profiler
 A simple profiler that can be used in any Unity player build as long as it can run BepInEx 5.x. It can generate a .csv file with profiling results from an arbitrary length of time.
