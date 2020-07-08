@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace RedirectInternalLogs
+namespace RedirectInternalLogs.Platforms
 {
-    public interface IPlatformPatcher
+    internal interface IPlatformPatcher
     {
         void Patch(IntPtr unityModule, int moduleSize);
     }

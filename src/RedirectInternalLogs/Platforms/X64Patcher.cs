@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using MonoMod.RuntimeDetour;
+using RedirectInternalLogs.Util;
 
-namespace RedirectInternalLogs
+namespace RedirectInternalLogs.Platforms
 {
     internal class X64Patcher : X86Patcher
     {
+        private static PrintFDelegate original;
+
         protected override BytePattern[] Patterns { get; } =
         {
             @"
@@ -20,8 +23,6 @@ namespace RedirectInternalLogs
                 E8
             "
         };
-
-        private static PrintFDelegate original;
 
         protected override void Apply(IntPtr from)
         {

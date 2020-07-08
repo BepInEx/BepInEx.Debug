@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using MonoMod.Utils;
 
-namespace RedirectInternalLogs
+namespace RedirectInternalLogs.Util
 {
     internal static class LibcHelper
     {

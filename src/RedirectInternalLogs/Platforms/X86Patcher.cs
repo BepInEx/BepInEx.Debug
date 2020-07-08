@@ -2,11 +2,14 @@
 using System.Linq;
 using System.Runtime.InteropServices;
 using MonoMod.RuntimeDetour;
+using RedirectInternalLogs.Util;
 
-namespace RedirectInternalLogs
+namespace RedirectInternalLogs.Platforms
 {
     internal class X86Patcher : IPlatformPatcher
     {
+        private static PrintFDelegate original;
+
         protected virtual BytePattern[] Patterns { get; } =
         {
             // New Unity
@@ -31,8 +34,6 @@ namespace RedirectInternalLogs
                 E8
             "
         };
-
-        private static PrintFDelegate original;
 
         public void Patch(IntPtr unityModule, int moduleSize)
         {
@@ -71,7 +72,7 @@ namespace RedirectInternalLogs
 
             var ptr = (byte*) start.ToPointer();
             RedirectInternalLogsPatcher.Logger.LogDebug($"Found at {match.res:X} ({start.ToInt64() + match.res:X})");
-            var offset = *(int*)(ptr + match.res + match.p.Length);
+            var offset = *(int*) (ptr + match.res + match.p.Length);
             var jmpRva = unchecked((uint) (match.res + match.p.Length + sizeof(int)) + offset);
             var addr = start.ToInt64() + jmpRva;
             RedirectInternalLogsPatcher.Logger.LogDebug($"Parsed offset: {offset:X}");
