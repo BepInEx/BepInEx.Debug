@@ -10,7 +10,7 @@ namespace RedirectInternalLogs.Util
     {
         [DynDllImport("libc", "vsprintf_s")] private static readonly VsPrintFsDelegate VsPrintF = null;
 
-        public static string Format(string format, IntPtr args, int buffer = 8192)
+        public static string Format(IntPtr format, IntPtr args, int buffer = 8192)
         {
             var sb = new StringBuilder(buffer);
             VsPrintF(sb, sb.Capacity, format, args);
@@ -31,7 +31,6 @@ namespace RedirectInternalLogs.Util
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate int VsPrintFsDelegate([MarshalAs(UnmanagedType.LPStr)] StringBuilder dest, int size,
-            [MarshalAs(UnmanagedType.LPStr)] string fmt, IntPtr vaList);
+        private delegate int VsPrintFsDelegate([MarshalAs(UnmanagedType.LPStr)] StringBuilder dest, int size, IntPtr fmt, IntPtr vaList);
     }
 }

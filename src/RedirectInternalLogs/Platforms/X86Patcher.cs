@@ -53,7 +53,7 @@ namespace RedirectInternalLogs.Platforms
             det.Apply();
         }
 
-        private static void OnLogHook(uint type, string pattern, IntPtr args)
+        private static void OnLogHook(uint type, IntPtr pattern, IntPtr args)
         {
             InternalUnityLogger.OnUnityLog((InternalLogLevel) type, pattern, args);
             original(type, pattern, args);
@@ -82,6 +82,6 @@ namespace RedirectInternalLogs.Platforms
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate void PrintFDelegate(uint type, [MarshalAs(UnmanagedType.LPStr)] string pattern, IntPtr parts);
+        private delegate void PrintFDelegate(uint type, IntPtr pattern, IntPtr parts);
     }
 }

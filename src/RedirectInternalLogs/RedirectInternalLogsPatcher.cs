@@ -82,7 +82,7 @@ namespace RedirectInternalLogs
 
         private static void InternalUnityLoggerOnOnUnityInternalLog(object sender, UnityLogEventArgs e)
         {
-            writer.Write($"[{e.LogLevel}] {e.Message}");
+            writer.WriteLine($"[{e.LogLevel}] {e.Message.Trim()}");
         }
     }
 }

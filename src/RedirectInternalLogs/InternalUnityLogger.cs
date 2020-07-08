@@ -24,7 +24,7 @@ namespace RedirectInternalLogs
     {
         public static event EventHandler<UnityLogEventArgs> OnUnityInternalLog;
 
-        internal static void OnUnityLog(InternalLogLevel logLevel, string message, IntPtr parts)
+        internal static void OnUnityLog(InternalLogLevel logLevel, IntPtr message, IntPtr parts)
         {
             try
             {

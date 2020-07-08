@@ -33,13 +33,13 @@ namespace RedirectInternalLogs.Platforms
             det.Apply();
         }
 
-        private static void OnUnityLog(ulong type, string message, IntPtr args)
+        private static void OnUnityLog(ulong type, IntPtr message, IntPtr args)
         {
             InternalUnityLogger.OnUnityLog((InternalLogLevel) type, message, args);
             original(type, message, args);
         }
 
         [UnmanagedFunctionPointer(CallingConvention.FastCall)]
-        private delegate void PrintFDelegate(ulong type, [MarshalAs(UnmanagedType.LPStr)] string pattern, IntPtr parts);
+        private delegate void PrintFDelegate(ulong type, IntPtr pattern, IntPtr parts);
     }
 }
