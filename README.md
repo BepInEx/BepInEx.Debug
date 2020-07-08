@@ -11,6 +11,15 @@ Based on [Apkd.UnityDemystifier](https://github.com/apkd/Apkd.UnityDemystifier).
 
 **How to use:** This is a preloader patcher. Put the compiled DLL into `BepInEx/patchers`. Requires BepInEx 5 (or BepInEx 4 with MonoMod.RuntimeDetour).
 
+### RedirectInternalLogs
+
+This preloader patcher allows to capture and redirect Unity internal debug logs (i.e. the contents of `output_log.txt`).  
+Preloader patch provides a public event one can listen to which will receive all Unity logs, including internal debug logs that are only output to `output_log.txt`.
+
+Unlike output log, which can be disabled in the game, this redirect will always capture said debug logs.
+
+**Right now WIP:** currently only outputs all logs to `myLog.log` to the game core (which can crash because of access violation).
+
 ### Simple Mono Profiler
 A simple profiler that can be used in any Unity player build as long as it can run BepInEx 5.x. It can generate a .csv file with profiling results from an arbitrary length of time.
 
