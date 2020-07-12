@@ -1,17 +1,17 @@
 // Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
 using System.Collections.Generic;
-using DemystifyExceptions.Demystify.Internal;
+using System.Diagnostics.Internal;
+using System.Text;
 
-namespace DemystifyExceptions.Demystify
+namespace System.Diagnostics
 {
-    internal sealed class ValueTupleResolvedParameter : ResolvedParameter
+    public class ValueTupleResolvedParameter : ResolvedParameter
     {
-        internal IList<string> TupleNames { get; set; }
+        public IList<string> TupleNames { get; set; }
 
-        internal override void AppendTypeName(StringBuilder sb)
+        protected override void AppendTypeName(StringBuilder sb)
         {
             if (ResolvedType.IsValueTuple())
             {
@@ -21,38 +21,33 @@ namespace DemystifyExceptions.Demystify
             {
                 // Need to unwrap the first generic argument first.
                 sb.Append(TypeNameHelper.GetTypeNameForGenericType(ResolvedType));
-                sb.Append('<');
+                sb.Append("<");
                 AppendValueTupleParameterName(sb, ResolvedType.GetGenericArguments()[0]);
-                sb.Append('>');
+                sb.Append(">");
             }
         }
 
 
         private void AppendValueTupleParameterName(StringBuilder sb, Type parameterType)
         {
-            sb.Append('(');
+            sb.Append("(");
             var args = parameterType.GetGenericArguments();
             for (var i = 0; i < args.Length; i++)
             {
-                if (i > 0)
-                    sb.Append(',').Append(' ');
+                if (i > 0) sb.Append(", ");
 
                 sb.AppendTypeDisplayName(args[i], false, true);
 
-#if APKD_STACKTRACE_FULLPARAMS
-                if (i >= TupleNames.Count)
-                    continue;
+                if (i >= TupleNames.Count) continue;
 
                 var argName = TupleNames[i];
-                if (argName == null)
-                    continue;
+                if (argName == null) continue;
 
-                sb.Append(' ');
+                sb.Append(" ");
                 sb.Append(argName);
-#endif
             }
 
-            sb.Append(')');
+            sb.Append(")");
         }
     }
 }

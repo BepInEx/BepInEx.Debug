@@ -1,16 +1,14 @@
 // Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using DemystifyExceptions.Demystify.Enumerable;
-using DemystifyExceptions.Demystify.Internal;
+using System.Collections.Generic.Enumerable;
+using System.Text;
 
-namespace DemystifyExceptions.Demystify
+namespace System.Diagnostics
 {
-    internal sealed partial class EnhancedStackTrace : StackTrace, IEnumerable<EnhancedStackFrame>
+    public partial class EnhancedStackTrace : StackTrace, IEnumerable<EnhancedStackFrame>
     {
         private readonly List<EnhancedStackFrame> _frames;
 
@@ -25,18 +23,17 @@ namespace DemystifyExceptions.Demystify
         // Exceptions:
         //   T:System.ArgumentNullException:
         //     The parameter e is null.
-        internal EnhancedStackTrace(Exception e)
+        public EnhancedStackTrace(Exception e)
         {
-            if (e == null)
-                throw new ArgumentNullException(nameof(e));
+            if (e == null) throw new ArgumentNullException(nameof(e));
 
             _frames = GetFrames(e);
         }
 
-        internal EnhancedStackTrace(StackTrace stackTrace)
+
+        public EnhancedStackTrace(StackTrace stackTrace)
         {
-            if (stackTrace == null)
-                throw new ArgumentNullException(nameof(stackTrace));
+            if (stackTrace == null) throw new ArgumentNullException(nameof(stackTrace));
 
             _frames = GetFrames(stackTrace);
         }
@@ -57,7 +54,7 @@ namespace DemystifyExceptions.Demystify
             return _frames.GetEnumerator();
         }
 
-        internal static EnhancedStackTrace Current()
+        public static EnhancedStackTrace Current()
         {
             return new EnhancedStackTrace(new StackTrace(1 /* skip this one frame */, true));
         }
@@ -90,13 +87,9 @@ namespace DemystifyExceptions.Demystify
         /// <returns>A readable representation of the stack trace.</returns>
         public override string ToString()
         {
-            return ToString(new StringBuilder());
-        }
+            if (_frames == null || _frames.Count == 0) return "";
 
-        public string ToString(StringBuilder sb)
-        {
-            if (_frames == null || _frames.Count == 0)
-                return "";
+            var sb = new StringBuilder();
 
             Append(sb);
 
@@ -106,47 +99,30 @@ namespace DemystifyExceptions.Demystify
 
         internal void Append(StringBuilder sb)
         {
-            var loggedFullFilepath = false;
+            var frames = _frames;
+            var count = frames.Count;
 
-            for (int i = 0, n = _frames.Count; i < n; i++)
+            for (var i = 0; i < count; i++)
             {
-                sb.Append('\n');
-                var frame = _frames[i];
+                if (i > 0) sb.Append(Environment.NewLine);
 
-                if (frame.IsEmpty)
+                var frame = frames[i];
+
+                sb.Append("   at ");
+                frame.MethodInfo.Append(sb);
+
+                var filePath = frame.GetFileName();
+                if (!string.IsNullOrEmpty(filePath))
                 {
-                    sb.Append(frame.StackFrame);
+                    sb.Append(" in ");
+                    sb.Append(TryGetFullPath(filePath));
                 }
-                else
+
+                var lineNo = frame.GetFileLineNumber();
+                if (lineNo != 0)
                 {
-                    frame.MethodInfo.Append(sb);
-
-                    var filePath = frame.GetFileName();
-                    if (!string.IsNullOrEmpty(filePath) && !frame.MethodInfo.Name.StartsWith("Log"))
-                    {
-#if !APKD_STACKTRACE_NOFORMAT
-                        sb.Append(" →(at ");
-#else
-                        sb.Append(" (at ");
-#endif
-                        if (!loggedFullFilepath)
-                        {
-                            frame.AppendFullFilename(sb);
-                            loggedFullFilepath = true;
-                        }
-                        else
-                        {
-                            sb.Append(filePath);
-                        }
-
-                        var lineNo = frame.GetFileLineNumber();
-                        if (lineNo != 0)
-                        {
-                            sb.Append(':');
-                            sb.Append(lineNo);
-                            sb.Append(')');
-                        }
-                    }
+                    sb.Append(":line ");
+                    sb.Append(lineNo);
                 }
             }
         }
@@ -154,6 +130,18 @@ namespace DemystifyExceptions.Demystify
         private EnumerableIList<EnhancedStackFrame> GetEnumerator()
         {
             return EnumerableIList.Create(_frames);
+        }
+
+        /// <summary>
+        ///     Tries to convert a given <paramref name="filePath" /> to a full path.
+        ///     Returns original value if the conversion isn't possible or a given path is relative.
+        /// </summary>
+        public static string TryGetFullPath(string filePath)
+        {
+            if (Uri.TryCreate(filePath, UriKind.Absolute, out var uri) && uri.IsFile)
+                return Uri.UnescapeDataString(uri.AbsolutePath);
+
+            return filePath;
         }
     }
 }

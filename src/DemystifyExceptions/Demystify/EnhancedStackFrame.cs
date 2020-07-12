@@ -1,15 +1,11 @@
 ﻿// Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
-using System.Diagnostics;
-using System.IO;
 using System.Reflection;
-using DemystifyExceptions.Demystify.Internal;
 
-namespace DemystifyExceptions.Demystify
+namespace System.Diagnostics
 {
-    internal sealed class EnhancedStackFrame : StackFrame
+    public class EnhancedStackFrame : StackFrame
     {
         private readonly int _colNumber;
         private readonly string _fileName;
@@ -27,11 +23,9 @@ namespace DemystifyExceptions.Demystify
             _colNumber = colNumber;
         }
 
-        internal StackFrame StackFrame { get; }
+        public StackFrame StackFrame { get; }
 
-        internal ResolvedMethod MethodInfo { get; }
-
-        internal bool IsEmpty => MethodInfo == null;
+        public ResolvedMethod MethodInfo { get; }
 
         /// <summary>
         ///     Gets the column number in the file that contains the code that is executing.
@@ -60,34 +54,7 @@ namespace DemystifyExceptions.Demystify
         /// <returns>The file name, or null if the file name cannot be determined.</returns>
         public override string GetFileName()
         {
-            if (_fileName.IsNullOrWhitespace())
-                return null;
-
-            if (_fileName.StartsWith(@"C:\buildslave\unity", StringComparison.Ordinal))
-                return null;
-
-            return Path.GetFileName(_fileName);
-            // return _fileName;
-        }
-
-        internal string GetFullFilename()
-        {
-            if (_fileName.IsNullOrWhitespace())
-                return null;
-            var index = _fileName.IndexOf("\\Assets\\");
-            if (index >= 0)
-                return _fileName.Substring(index + 1);
             return _fileName;
-        }
-
-        internal StringBuilder AppendFullFilename(StringBuilder sb)
-        {
-            if (_fileName.IsNullOrWhitespace())
-                return sb;
-            var index = _fileName.IndexOf("\\Assets\\");
-            if (index >= 0)
-                return sb.Append(_fileName, index + 1);
-            return sb.Append(_fileName);
         }
 
         /// <summary>

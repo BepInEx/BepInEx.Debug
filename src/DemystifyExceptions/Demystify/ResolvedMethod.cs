@@ -1,38 +1,39 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
+using System.Collections.Generic.Enumerable;
 using System.Reflection;
-using DemystifyExceptions.Demystify.Enumerable;
-using DemystifyExceptions.Demystify.Internal;
+using System.Text;
 
-namespace DemystifyExceptions.Demystify
+namespace System.Diagnostics
 {
-    internal sealed class ResolvedMethod
+    public class ResolvedMethod
     {
-        internal MethodBase MethodBase { get; set; }
+        public MethodBase MethodBase { get; set; }
 
-        internal Type DeclaringType { get; set; }
+        public Type DeclaringType { get; set; }
 
-        internal bool IsLambda { get; set; }
+        public bool IsAsync { get; set; }
 
-        internal ResolvedParameter ReturnParameter { get; set; }
+        public bool IsLambda { get; set; }
 
-        internal string Name { get; set; }
+        public ResolvedParameter ReturnParameter { get; set; }
 
-        internal int? Ordinal { get; set; }
+        public string Name { get; set; }
 
-        internal string GenericArguments { get; set; }
+        public int? Ordinal { get; set; }
 
-        internal Type[] ResolvedGenericArguments { get; set; }
+        public string GenericArguments { get; set; }
 
-        internal MethodBase SubMethodBase { get; set; }
+        public Type[] ResolvedGenericArguments { get; set; }
 
-        internal string SubMethod { get; set; }
+        public MethodBase SubMethodBase { get; set; }
 
-        internal EnumerableIList<ResolvedParameter> Parameters { get; set; }
+        public string SubMethod { get; set; }
 
-        internal EnumerableIList<ResolvedParameter> SubMethodParameters { get; set; }
+        public EnumerableIList<ResolvedParameter> Parameters { get; set; }
+
+        public EnumerableIList<ResolvedParameter> SubMethodParameters { get; set; }
 
         public override string ToString()
         {
@@ -41,58 +42,43 @@ namespace DemystifyExceptions.Demystify
 
         internal StringBuilder Append(StringBuilder builder)
         {
+            if (IsAsync) builder.Append("async ");
+
             if (ReturnParameter != null)
             {
-                //if (IsAsync)
-                //    ReturnParameter.Prefix2 = "async";
-
                 ReturnParameter.Append(builder);
-                builder.Append(' ');
+                builder.Append(" ");
             }
-
-            var hasSubMethodOrLambda = !string.IsNullOrEmpty(SubMethod) || IsLambda;
 
             if (DeclaringType != null)
             {
                 if (Name == ".ctor")
                 {
-                    if (!hasSubMethodOrLambda)
-                    {
-                        builder
-                            .Append(".new ");
+                    if (string.IsNullOrEmpty(SubMethod) && !IsLambda)
+                        builder.Append("new ");
 
-                        AppendDeclaringTypeName(builder)
-                            .Append(Name);
-                    }
+                    AppendDeclaringTypeName(builder);
                 }
                 else if (Name == ".cctor")
                 {
                     builder.Append("static ");
-
                     AppendDeclaringTypeName(builder);
                 }
                 else
                 {
                     AppendDeclaringTypeName(builder)
-                        .Append('.')
+                        .Append(".")
                         .Append(Name);
                 }
             }
             else
             {
-                builder
-                    .Append('.')
-                    .Append(Name);
+                builder.Append(Name);
             }
 
             builder.Append(GenericArguments);
 
-            if (!hasSubMethodOrLambda)
-                builder.AppendFormattingChar('‼');
-
-#if !APKD_STACKTRACE_HIDEPARAMS
-#if APKD_STACKTRACE_FULLPARAMS
-            builder.Append('(');
+            builder.Append("(");
             if (MethodBase != null)
             {
                 var isFirst = true;
@@ -101,132 +87,50 @@ namespace DemystifyExceptions.Demystify
                     if (isFirst)
                         isFirst = false;
                     else
-                        builder.Append(',').Append(' ');
-
+                        builder.Append(", ");
                     param.Append(builder);
                 }
             }
             else
             {
-                builder.Append('?');
-            }
-            builder.Append(')');
-#elif APKD_STACKTRACE_SHORTPARAMS
-            char GetParamAlphabeticalName(int index) => (char)((int)'a' + index);
-            char? GetParamNameFirstLetter(ResolvedParameter param) => string.IsNullOrEmpty(param?.Name) ? null as char? : param.Name[0];
-
-            builder.Append('(');
-            if (MethodBase != null)
-            {
-                var isFirst = true;
-                builder.AppendFormattingChar('‹');
-                for (int i = 0, n = Parameters.Count; i < n; ++i)
-                {
-                    if (isFirst)
-                        isFirst = false;
-                    else
-                        builder.Append(',').Append(' ');
-
-                    builder.Append(GetParamNameFirstLetter(Parameters[i]) ?? GetParamAlphabeticalName(i));
-                }
-                builder.AppendFormattingChar('›');
-            }
-            else
-            {
-                builder.Append('?');
-            }
-            builder.Append(')');
-#else
-            builder.Append('(');
-            if (MethodBase != null)
-            {
-                var isFirst = true;
-                builder.AppendFormattingChar('‹');
-                foreach (var param in Parameters)
-                {
-                    if (isFirst)
-                        isFirst = false;
-                    else
-                        builder.Append(',').Append(' ');
-
-                    param.AppendTypeName(builder);
-                }
-
-                builder.AppendFormattingChar('›');
-            }
-            else
-            {
-                builder.Append('?');
+                builder.Append("?");
             }
 
-            builder.Append(')');
-#endif
-#endif
+            builder.Append(")");
 
-            if (hasSubMethodOrLambda)
+            if (!string.IsNullOrEmpty(SubMethod) || IsLambda)
             {
-                builder.Append('+');
+                builder.Append("+");
                 builder.Append(SubMethod);
-                if (IsLambda)
+                builder.Append("(");
+                if (SubMethodBase != null)
                 {
-                    builder.Append('(');
-                    if (SubMethodBase != null)
-                    {
-                        var isFirst = true;
-                        builder.AppendFormattingChar('‹');
-                        foreach (var param in SubMethodParameters)
-                        {
-                            if (isFirst)
-                                isFirst = false;
-                            else
-                                builder.Append(',').Append(' ');
-
-                            param.AppendTypeName(builder);
-                        }
-
-                        builder.AppendFormattingChar('›');
-                    }
-                    else
-                    {
-                        builder.Append('?');
-                    }
-
-                    builder.Append(")➞ ");
-
-                    var returnType = (SubMethodBase as MethodInfo)?.ReturnType;
-                    if (returnType != null)
-                        builder.AppendTypeDisplayName(returnType, false);
-                    else
-                        builder.Append("{…}");
-
-                    if (Ordinal.HasValue)
-                    {
-                        builder.Append(' ');
-                        builder.Append('[');
-                        builder.Append(Ordinal.Value);
-                        builder.Append(']');
-                    }
-
-                    builder.AppendFormattingChar('‼');
-                }
-                else
-                {
-                    builder.AppendFormattingChar('‼');
-                    builder.Append('(');
                     var isFirst = true;
-                    builder.AppendFormattingChar('‹');
                     foreach (var param in SubMethodParameters)
                     {
                         if (isFirst)
                             isFirst = false;
                         else
-                            builder.Append(',').Append(' ');
-
-                        param.AppendTypeName(builder);
+                            builder.Append(", ");
+                        param.Append(builder);
                     }
+                }
+                else
+                {
+                    builder.Append("?");
+                }
 
-                    builder.AppendFormattingChar('›');
-                    builder.Append(')');
+                builder.Append(")");
+                if (IsLambda)
+                {
+                    builder.Append(" => { }");
+
+                    if (Ordinal.HasValue)
+                    {
+                        builder.Append(" [");
+                        builder.Append(Ordinal);
+                        builder.Append("]");
+                    }
                 }
             }
 

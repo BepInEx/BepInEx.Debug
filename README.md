@@ -7,7 +7,7 @@ You need to have at least [BepInEx 5,x](https://github.com/BepInEx/BepInEx) inst
 
 ### DemystifyExceptions
 Turns exceptions into a more readable format. Resolves enumerators, lambdas and other complex structures.  
-Based on [Apkd.UnityDemystifier](https://github.com/apkd/Apkd.UnityDemystifier).
+Based on [Ben.Demystifier](https://github.com/benaadams/Ben.Demystifier).
 
 **How to use:** This is a preloader patcher. Put the compiled DLL into `BepInEx/patchers`. Requires BepInEx 5 (or BepInEx 4 with MonoMod.RuntimeDetour).
 
