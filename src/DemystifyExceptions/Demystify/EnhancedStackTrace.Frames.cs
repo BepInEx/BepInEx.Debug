@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Generic.Enumerable;
 using System.Diagnostics.Internal;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -234,7 +235,7 @@ namespace System.Diagnostics
                     break;
                 }
                 case GeneratedNameKind.LambdaMethod:
-                    subMethodName = "";
+                    subMethodName = generatedName;
                     break;
             }
 
