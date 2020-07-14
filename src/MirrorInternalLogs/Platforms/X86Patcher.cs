@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using MirrorInternalLogs.Util;
 using MonoMod.RuntimeDetour;
-using RedirectInternalLogs.Util;
 
-namespace RedirectInternalLogs.Platforms
+namespace MirrorInternalLogs.Platforms
 {
     internal class X86Patcher : IPlatformPatcher
     {
@@ -65,18 +65,18 @@ namespace RedirectInternalLogs.Platforms
                 .FirstOrDefault(m => m.res >= 0);
             if (match == null)
             {
-                RedirectInternalLogsPatcher.Logger.LogWarning(
+                MirrorInternalLogsPatcher.Logger.LogWarning(
                     "No match found, cannot hook logging! Please report Unity version or game name to the developer!");
                 return IntPtr.Zero;
             }
 
             var ptr = (byte*) start.ToPointer();
-            RedirectInternalLogsPatcher.Logger.LogDebug($"Found at {match.res:X} ({start.ToInt64() + match.res:X})");
+            MirrorInternalLogsPatcher.Logger.LogDebug($"Found at {match.res:X} ({start.ToInt64() + match.res:X})");
             var offset = *(int*) (ptr + match.res + match.p.Length);
             var jmpRva = unchecked((uint) (match.res + match.p.Length + sizeof(int)) + offset);
             var addr = start.ToInt64() + jmpRva;
-            RedirectInternalLogsPatcher.Logger.LogDebug($"Parsed offset: {offset:X}");
-            RedirectInternalLogsPatcher.Logger.LogDebug(
+            MirrorInternalLogsPatcher.Logger.LogDebug($"Parsed offset: {offset:X}");
+            MirrorInternalLogsPatcher.Logger.LogDebug(
                 $"Jump RVA: {jmpRva:X}, memory address: {addr:X} (image base: {start.ToInt64():X})");
             return new IntPtr(addr);
         }

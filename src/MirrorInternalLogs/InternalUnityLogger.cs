@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
-using RedirectInternalLogs.Util;
+using MirrorInternalLogs.Util;
 
-namespace RedirectInternalLogs
+namespace MirrorInternalLogs
 {
     public enum InternalLogLevel
     {

@@ -7,18 +7,18 @@ using System.Text;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using MirrorInternalLogs.Platforms;
+using MirrorInternalLogs.Util;
 using Mono.Cecil;
-using RedirectInternalLogs.Platforms;
-using RedirectInternalLogs.Util;
 
-namespace RedirectInternalLogs
+namespace MirrorInternalLogs
 {
-    internal static class RedirectInternalLogsPatcher
+    internal static class MirrorInternalLogsPatcher
     {
-        internal static ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("RedirectInternalLogs");
+        internal static ManualLogSource Logger = BepInEx.Logging.Logger.CreateLogSource("MirrorInternalLogs");
 
         private static readonly ConfigFile Config =
-            new ConfigFile(Path.Combine(Paths.ConfigPath, "RedirectInternalLogs.cfg"), true);
+            new ConfigFile(Path.Combine(Paths.ConfigPath, "MirrorInternalLogs.cfg"), true);
 
         private static IPlatformPatcher patcher;
         private static StreamWriter writer;

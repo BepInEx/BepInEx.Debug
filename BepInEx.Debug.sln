@@ -17,7 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoProfilerLoader", "src\S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoProfilerController", "src\simpleprofiler\MonoProfilerController\MonoProfilerController.csproj", "{E643A810-00A8-4B6F-83FC-B8631257EB43}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedirectInternalLogs", "src\RedirectInternalLogs\RedirectInternalLogs.csproj", "{29571930-F2E9-45DC-BB65-5B60C2B16850}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MirrorInternalLogs", "src\MirrorInternalLogs\MirrorInternalLogs.csproj", "{29571930-F2E9-45DC-BB65-5B60C2B16850}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

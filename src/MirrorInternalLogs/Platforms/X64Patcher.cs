@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using MirrorInternalLogs.Util;
 using MonoMod.RuntimeDetour;
-using RedirectInternalLogs.Util;
 
-namespace RedirectInternalLogs.Platforms
+namespace MirrorInternalLogs.Platforms
 {
     internal class X64Patcher : X86Patcher
     {

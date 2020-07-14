@@ -7,8 +7,8 @@
         <ProjectGuid>{29571930-F2E9-45DC-BB65-5B60C2B16850}</ProjectGuid>
         <OutputType>Library</OutputType>
         <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>RedirectInternalLogs</RootNamespace>
-        <AssemblyName>RedirectInternalLogs</AssemblyName>
+        <RootNamespace>MirrorInternalLogs</RootNamespace>
+        <AssemblyName>MirrorInternalLogs</AssemblyName>
         <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
     </PropertyGroup>
@@ -72,7 +72,7 @@
         <Compile Include="Platforms\IPlatformPatcher.cs" />
         <Compile Include="Platforms\X64Patcher.cs" />
         <Compile Include="Platforms\X86Patcher.cs" />
-        <Compile Include="RedirectInternalLogsPatcher.cs" />
+        <Compile Include="MirrorInternalLogsPatcher.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="Util\BytePattern.cs" />
         <Compile Include="Util\LibcHelper.cs" />

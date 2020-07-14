@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RedirectInternalLogs.Platforms
+namespace MirrorInternalLogs.Platforms
 {
     internal interface IPlatformPatcher
     {

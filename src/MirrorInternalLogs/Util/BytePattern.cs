@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Linq;
 
-namespace RedirectInternalLogs.Util
+namespace MirrorInternalLogs.Util
 {
     internal class BytePattern
     {
