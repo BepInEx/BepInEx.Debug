@@ -21,7 +21,7 @@
     <DefineConstants>TRACE;DEBUG;APKD_STACKTRACE_NOCACHE;APKD_STACKTRACE_LAMBDAORDINALS;APKD_STACKTRACE_NOFORMAT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <LangVersion>7.1</LangVersion>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
