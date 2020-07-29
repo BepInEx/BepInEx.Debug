@@ -45,6 +45,19 @@ namespace MirrorInternalLogs
 
         public static void Initialize()
         {
+            try
+            {
+                InitializeInternal();
+            }
+            catch (Exception e)
+            {
+                Logger.LogWarning($"Failed to initialize log mirroring: ({e.GetType()}) {e.Message}. No mirrored logs will be generated.");
+                Logger.LogDebug(e);
+            }
+        }
+
+        private static void InitializeInternal()
+        {
             if (LogToFile.Value)
                 InitializeFileLog();
             LibcHelper.Init();
