@@ -31,6 +31,7 @@ namespace MirrorInternalLogs.Util
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate int VsPrintFsDelegate([MarshalAs(UnmanagedType.LPStr)] StringBuilder dest, IntPtr fmt, IntPtr vaList);
+        private delegate int VsPrintFsDelegate([MarshalAs(UnmanagedType.LPStr)] StringBuilder dest, IntPtr fmt,
+            IntPtr vaList);
     }
 }
