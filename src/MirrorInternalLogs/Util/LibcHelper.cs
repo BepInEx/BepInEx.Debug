@@ -8,12 +8,12 @@ namespace MirrorInternalLogs.Util
 {
     internal static class LibcHelper
     {
-        [DynDllImport("libc", "vsprintf")] private static readonly VsPrintFsDelegate VsPrintF = null;
+        [DynDllImport("libc", "vsprintf_s")] private static readonly VsPrintFsDelegate VsPrintF = null;
 
-        public static string Format(IntPtr format, IntPtr args, int buffer = 8192)
+        public static string Format(IntPtr format, IntPtr args, int buffer = ushort.MaxValue)
         {
             var sb = new StringBuilder(buffer);
-            VsPrintF(sb, format, args);
+            VsPrintF(sb, sb.Capacity, format, args);
             return sb.ToString();
         }
 
@@ -31,7 +31,6 @@ namespace MirrorInternalLogs.Util
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate int VsPrintFsDelegate([MarshalAs(UnmanagedType.LPStr)] StringBuilder dest, IntPtr fmt,
-            IntPtr vaList);
+        private delegate int VsPrintFsDelegate([MarshalAs(UnmanagedType.LPStr)] StringBuilder dest, int bufferSize, IntPtr fmt, IntPtr vaList);
     }
 }
