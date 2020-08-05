@@ -37,6 +37,15 @@ namespace MirrorInternalLogs
                 .AppendLine("process - process name")
                 .ToString());
 
+        internal static ConfigEntry<string> LogFormat = Config.Bind("Logging.File", "LogFormat", "[{0}] {1}",
+            new StringBuilder()
+                .AppendLine("Format for log messages. Accepts same input as String.Format.")
+                .AppendLine("Available parameters:")
+                .AppendLine("0 - Log level as reported by unity")
+                .AppendLine("1 - The actual log message")
+                .AppendLine("2 - Current timestamp as DateTime object")
+                .ToString());
+
         public static IEnumerable<string> TargetDLLs { get; } = new string[0];
 
         public static void Patch(AssemblyDefinition ass)
@@ -95,7 +104,14 @@ namespace MirrorInternalLogs
 
         private static void InternalUnityLoggerOnOnUnityInternalLog(object sender, UnityLogEventArgs e)
         {
-            writer.WriteLine($"[{e.LogLevel}] {e.Message.Trim()}");
+            try
+            {
+                writer.WriteLine(LogFormat.Value, e.LogLevel, e.Message.Trim(), DateTime.Now);
+            }
+            catch (Exception)
+            {
+                // Pass on failed logging
+            }
         }
     }
 }
