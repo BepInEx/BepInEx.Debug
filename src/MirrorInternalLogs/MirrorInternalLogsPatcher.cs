@@ -97,9 +97,36 @@ namespace MirrorInternalLogs
             }));
             var dir = Path.GetDirectoryName(path);
             Directory.CreateDirectory(dir);
-            writer = new StreamWriter(path, false, Encoding.UTF8) {AutoFlush = true};
+            if (!TryCreateFile(path, out writer))
+            {
+                Logger.LogWarning($"Couldn't create log file because the file is likely in use, skipping mirroring logs...");
+                return;
+            }
 
             InternalUnityLogger.OnUnityInternalLog += InternalUnityLoggerOnOnUnityInternalLog;
+        }
+
+        private static bool TryCreateFile(string path, out StreamWriter sw, int max = 50)
+        {
+            var dir = Path.GetDirectoryName(path);
+            var filename = Path.GetFileNameWithoutExtension(path);
+            var ext = Path.GetExtension(path);
+
+            for (var i = 0; i < max; i++)
+            {
+                try
+                {
+                    var filePath = Path.Combine(dir, $"{filename}{(i > 0 ? $"_{i}" : "")}{ext}");
+                    sw = new StreamWriter(filePath, false, Encoding.UTF8) {AutoFlush = true};
+                    return true;
+                }
+                catch (Exception)
+                {
+                    // skip
+                }
+            }
+            sw = null;
+            return false;
         }
 
         private static void InternalUnityLoggerOnOnUnityInternalLog(object sender, UnityLogEventArgs e)
