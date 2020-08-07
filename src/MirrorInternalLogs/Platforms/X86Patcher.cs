@@ -14,24 +14,24 @@ namespace MirrorInternalLogs.Platforms
         {
             // New Unity
             @"
-                55
-                8B EC
-                8D 45 0C
-                50
-                FF 75 08
-                6A 05
-                E8
+                55            ; push   ebp
+                8B EC         ; mov    ebp,esp
+                8D 45 0C      ; lea    eax,[ebp+0xc]
+                50            ; push   eax
+                FF 75 08      ; push   DWORD PTR [ebp+0x8]
+                6A 05         ; push   0x5
+                E8            ; call
             ",
             // Older Unity
             @"
-                55
-                8B EC
-                8B 4D 08
-                8D 45 0C
-                50
-                51
-                6A 05
-                E8
+                55            ; push   ebp
+                8B EC         ; mov    ebp,esp
+                8B 4D 08      ; mov    ecx,DWORD PTR [ebp+0x8]
+                8D 45 0C      ; lea    eax,[ebp+0xc]
+                50            ; push   eax
+                51            ; push   ecx
+                6A 05         ; push   0x5
+                E8            ; call
             "
         };
 

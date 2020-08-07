@@ -11,11 +11,7 @@ namespace MirrorInternalLogs.Util
 
         public BytePattern(string bytes)
         {
-            pattern = bytes.Replace("\t", " ")
-                .Replace("\r", " ")
-                .Replace("\n", " ")
-                .Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries)
-                .Select(p => byte.Parse(p.Trim(), NumberStyles.HexNumber)).ToArray();
+            pattern = bytes.ParseHexBytes();
             CreateJumpTable();
         }
 

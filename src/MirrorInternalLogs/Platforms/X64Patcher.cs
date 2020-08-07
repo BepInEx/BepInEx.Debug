@@ -12,15 +12,15 @@ namespace MirrorInternalLogs.Platforms
         protected override BytePattern[] Patterns { get; } =
         {
             @"
-                48 89 4C 24 08
-                48 89 54 24 10
-                4C 89 44 24 18
-                4C 89 4C 24 20
-                48 83 EC 28
-                48 8B D1
-                4C 8D 44 24 38
-                B9 05 00 00 00
-                E8
+                48 89 4C 24 08        ; mov    QWORD PTR [rsp+0x8],rcx
+                48 89 54 24 10        ; mov    QWORD PTR [rsp+0x10],rdx
+                4C 89 44 24 18        ; mov    QWORD PTR [rsp+0x18],r8
+                4C 89 4C 24 20        ; mov    QWORD PTR [rsp+0x20],r9
+                48 83 EC 28           ; sub    rsp,0x28
+                48 8B D1              ; mov    rdx,rcx
+                4C 8D 44 24 38        ; lea    r8,[rsp+0x38]
+                B9 05 00 00 00        ; mov    ecx,0x5
+                E8                    ; call
             "
         };
 
@@ -39,7 +39,7 @@ namespace MirrorInternalLogs.Platforms
             original(type, message, args);
         }
 
-        [UnmanagedFunctionPointer(CallingConvention.FastCall)]
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void PrintFDelegate(ulong type, IntPtr pattern, IntPtr parts);
     }
 }
