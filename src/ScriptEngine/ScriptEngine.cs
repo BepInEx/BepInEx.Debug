@@ -76,21 +76,32 @@ namespace ScriptEngine
                     dll.Write(ms);
                     var ass = Assembly.Load(ms.ToArray());
 
-                    foreach(Type type in ass.GetTypes())
+                    try
                     {
-                        if(typeof(BaseUnityPlugin).IsAssignableFrom(type))
+                        foreach (Type type in ass.GetTypes())
                         {
-                            var metadata = MetadataHelper.GetMetadata(type);
-                            if(metadata != null)
+                            if (typeof(BaseUnityPlugin).IsAssignableFrom(type))
                             {
-                                var typeDefinition = dll.MainModule.Types.First(x => x.FullName == type.FullName);
-                                var typeInfo = Chainloader.ToPluginInfo(typeDefinition);
-                                Chainloader.PluginInfos[metadata.GUID] = typeInfo;
+                                var metadata = MetadataHelper.GetMetadata(type);
+                                if (metadata != null)
+                                {
+                                    var typeDefinition = dll.MainModule.Types.First(x => x.FullName == type.FullName);
+                                    var typeInfo = Chainloader.ToPluginInfo(typeDefinition);
+                                    Chainloader.PluginInfos[metadata.GUID] = typeInfo;
 
-                                Logger.Log(LogLevel.Info, $"Reloading {metadata.GUID}");
-                                StartCoroutine(DelayAction(() => obj.AddComponent(type))); 
+                                    Logger.Log(LogLevel.Info, $"Reloading {metadata.GUID}");
+                                    StartCoroutine(DelayAction(() => obj.AddComponent(type)));
+                                }
                             }
                         }
+                    }
+                    catch (ReflectionTypeLoadException e)
+                    {
+                        StringBuilder strTypes = new StringBuilder();
+                        foreach (var t in e.Types) { strTypes.Append(t + "\r\n"); }
+                        StringBuilder strExceptions = new StringBuilder();
+                        foreach (var l in e.LoaderExceptions) { strExceptions.Append(l + "\r\n"); }
+                        Logger.LogError($"Error While loading {path} \r\n -- Types --\r\n{strTypes}\r\n-- LoaderExceptions --\r\n{strExceptions}\r\n -- StackTrace --\r\n{e.StackTrace}");
                     }
                 }
             }
