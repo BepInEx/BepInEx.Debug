@@ -97,11 +97,17 @@ namespace ScriptEngine
                     }
                     catch (ReflectionTypeLoadException e)
                     {
-                        StringBuilder strTypes = new StringBuilder();
-                        foreach (var t in e.Types) { strTypes.Append(t + "\r\n"); }
-                        StringBuilder strExceptions = new StringBuilder();
-                        foreach (var l in e.LoaderExceptions) { strExceptions.Append(l + "\r\n"); }
-                        Logger.LogError($"Error While loading {path} \r\n -- Types --\r\n{strTypes}\r\n-- LoaderExceptions --\r\n{strExceptions}\r\n -- StackTrace --\r\n{e.StackTrace}");
+                        var sbMessage = new StringBuilder();
+                        sbMessage.AppendLine($"Error While loading {path}");
+                        sbMessage.AppendLine("-- Successfully Read Types --");
+                        foreach (var t in e.Types)
+                            if (t != null) sbMessage.AppendLine(t.ToString());
+                        sbMessage.AppendLine("\r\n-- LoaderExceptions --");
+                        foreach (var l in e.LoaderExceptions)
+                            if (l != null) sbMessage.AppendLine(l.ToString());
+                        sbMessage.AppendLine("\r\n-- StackTrace --");
+                        sbMessage.AppendLine(e.StackTrace);
+                        Logger.LogError(sbMessage.ToString());
                     }
                 }
             }
