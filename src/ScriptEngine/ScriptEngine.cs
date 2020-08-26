@@ -98,13 +98,10 @@ namespace ScriptEngine
                     catch (ReflectionTypeLoadException e)
                     {
                         var sbMessage = new StringBuilder();
-                        sbMessage.AppendLine($"Error While loading {path}");
-                        sbMessage.AppendLine("-- Successfully Read Types --");
-                        foreach (var t in e.Types)
-                            if (t != null) sbMessage.AppendLine(t.ToString());
+                        sbMessage.AppendLine($"Error while loading {path}");
                         sbMessage.AppendLine("\r\n-- LoaderExceptions --");
                         foreach (var l in e.LoaderExceptions)
-                            if (l != null) sbMessage.AppendLine(l.ToString());
+                            sbMessage.AppendLine(l.ToString());
                         sbMessage.AppendLine("\r\n-- StackTrace --");
                         sbMessage.AppendLine(e.StackTrace);
                         Logger.LogError(sbMessage.ToString());
