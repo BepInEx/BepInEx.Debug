@@ -1,20 +1,17 @@
 // Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System.Collections;
-using System.Collections.Generic;
-
-namespace DemystifyExceptions.Demystify.Enumerable
+namespace System.Collections.Generic.Enumerable
 {
-    internal static class EnumerableIList
+    public static class EnumerableIList
     {
-        internal static EnumerableIList<T> Create<T>(IList<T> list)
+        public static EnumerableIList<T> Create<T>(IList<T> list)
         {
             return new EnumerableIList<T>(list);
         }
     }
 
-    internal struct EnumerableIList<T> : IEnumerableIList<T>, IList<T>
+    public struct EnumerableIList<T> : IEnumerableIList<T>, IList<T>
     {
         private readonly IList<T> _list;
 
@@ -51,7 +48,7 @@ namespace DemystifyExceptions.Demystify.Enumerable
         }
 
         /// <inheritdoc />
-        public int Count => _list?.Count ?? 0;
+        public int Count => _list.Count;
 
         /// <inheritdoc />
         public bool IsReadOnly => _list.IsReadOnly;

@@ -1,10 +1,9 @@
-using System;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace DemystifyExceptions.Demystify.Internal
+namespace System.Diagnostics.Internal
 {
-    internal sealed class ILReader
+    internal class ILReader
     {
         private static readonly OpCode[] singleByteOpCode;
         private static readonly OpCode[] doubleByteOpCode;
@@ -32,16 +31,17 @@ namespace DemystifyExceptions.Demystify.Internal
             }
         }
 
-        internal ILReader(byte[] cil)
+
+        public ILReader(byte[] cil)
         {
             _cil = cil;
         }
 
-        internal OpCode OpCode { get; private set; }
-        internal int MetadataToken { get; private set; }
-        internal MemberInfo Operand { get; private set; }
+        public OpCode OpCode { get; private set; }
+        public int MetadataToken { get; private set; }
+        public MemberInfo Operand { get; private set; }
 
-        internal bool Read(MethodBase methodInfo)
+        public bool Read(MethodBase methodInfo)
         {
             if (ptr < _cil.Length)
             {
@@ -69,16 +69,12 @@ namespace DemystifyExceptions.Demystify.Internal
             {
                 case OperandType.InlineMethod:
                     MetadataToken = ReadInt();
-
                     Type[] methodArgs = null;
                     if (methodInfo.GetType() != typeof(ConstructorInfo) &&
                         !methodInfo.GetType().IsSubclassOf(typeof(ConstructorInfo)))
                         methodArgs = methodInfo.GetGenericArguments();
-
                     Type[] typeArgs = null;
-                    if (methodInfo.DeclaringType != null)
-                        typeArgs = methodInfo.DeclaringType.GetGenericArguments();
-
+                    if (methodInfo.DeclaringType != null) typeArgs = methodInfo.DeclaringType.GetGenericArguments();
                     try
                     {
                         return methodInfo.Module.ResolveMember(MetadataToken, typeArgs, methodArgs);
@@ -124,8 +120,7 @@ namespace DemystifyExceptions.Demystify.Internal
                     return null;
             }
 
-            for (var i = 0; i < inlineLength; i++)
-                ReadByte();
+            for (var i = 0; i < inlineLength; i++) ReadByte();
 
             return null;
         }

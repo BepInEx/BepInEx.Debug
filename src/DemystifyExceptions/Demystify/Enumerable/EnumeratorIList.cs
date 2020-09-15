@@ -1,17 +1,14 @@
 ﻿// Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System.Collections;
-using System.Collections.Generic;
-
-namespace DemystifyExceptions.Demystify.Enumerable
+namespace System.Collections.Generic.Enumerable
 {
-    internal struct EnumeratorIList<T> : IEnumerator<T>
+    public struct EnumeratorIList<T> : IEnumerator<T>
     {
         private readonly IList<T> _list;
         private int _index;
 
-        internal EnumeratorIList(IList<T> list)
+        public EnumeratorIList(IList<T> list)
         {
             _index = -1;
             _list = list;

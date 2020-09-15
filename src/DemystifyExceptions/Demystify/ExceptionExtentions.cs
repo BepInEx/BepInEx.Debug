@@ -1,14 +1,15 @@
 // Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
+using System.Collections.Generic.Enumerable;
+using System.Collections.ObjectModel;
 using System.Reflection;
-using DemystifyExceptions.Demystify.Internal;
+using System.Text;
 
-namespace DemystifyExceptions.Demystify
+namespace System.Diagnostics
 {
     /// <nodoc />
-    internal static class ExceptionExtensions
+    public static class ExceptionExtentions
     {
         private static readonly FieldInfo stackTraceString =
             typeof(Exception).GetField("_stackTraceString", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -22,7 +23,7 @@ namespace DemystifyExceptions.Demystify
         ///     Demystifies the given <paramref name="exception" /> and tracks the original stack traces for the whole exception
         ///     tree.
         /// </summary>
-        internal static T Demystify<T>(this T exception) where T : Exception
+        public static T Demystify<T>(this T exception) where T : Exception
         {
             try
             {
@@ -30,16 +31,14 @@ namespace DemystifyExceptions.Demystify
 
                 if (stackTrace.FrameCount > 0) exception.SetStackTracesString(stackTrace.ToString());
 
-                //if (exception is AggregateException aggEx)
-                //{
-                //    foreach (var ex in EnumerableIList.Create(aggEx.InnerExceptions))
-                //    {
-                //        ex.Demystify();
-                //    }
-                //}
+                if (InteropHelper.Types.AggregateException.IsInstanceOfType(exception))
+                {
+                    var innerExceptions =
+                        InteropHelper.Types.InnerExceptions.GetValue(exception, null) as ReadOnlyCollection<Exception>;
+                    foreach (var ex in EnumerableIList.Create(innerExceptions)) ex.Demystify();
+                }
 
-                exception.InnerException
-                    .Demystify();
+                exception.InnerException?.Demystify();
             }
             catch
             {
@@ -58,7 +57,7 @@ namespace DemystifyExceptions.Demystify
         ///     Unlike <see cref="Demystify{T}" /> this method is pure. It calls <see cref="Demystify{T}" /> first,
         ///     computes a demystified string representation and then restores the original state of the exception back.
         /// </remarks>
-        internal static string ToStringDemystified(this Exception exception)
+        public static string ToStringDemystified(this Exception exception)
         {
             return new StringBuilder().AppendDemystified(exception).ToString();
         }

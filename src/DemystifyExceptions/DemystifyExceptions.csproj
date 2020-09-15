@@ -21,7 +21,7 @@
     <DefineConstants>TRACE;DEBUG;APKD_STACKTRACE_NOCACHE;APKD_STACKTRACE_LAMBDAORDINALS;APKD_STACKTRACE_NOFORMAT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <LangVersion>7.1</LangVersion>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -30,7 +30,7 @@
     <DefineConstants>TRACE;APKD_STACKTRACE_NOCACHE;APKD_STACKTRACE_LAMBDAORDINALS;APKD_STACKTRACE_NOFORMAT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <LangVersion>7.1</LangVersion>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null">
@@ -66,21 +66,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DemystifyPatcher.cs" />
-    <Compile Include="Demystify\CacheDictionary.cs" />
     <Compile Include="Demystify\EnhancedStackFrame.cs" />
     <Compile Include="Demystify\EnhancedStackTrace.cs" />
     <Compile Include="Demystify\EnhancedStackTrace.Frames.cs" />
     <Compile Include="Demystify\Enumerable\EnumerableIList.cs" />
     <Compile Include="Demystify\Enumerable\EnumeratorIList.cs" />
     <Compile Include="Demystify\Enumerable\IEnumerableIList.cs" />
-    <Compile Include="Demystify\ExceptionExtensions.cs" />
-    <Compile Include="Demystify\Extensions.cs" />
+    <Compile Include="Demystify\ExceptionExtentions.cs" />
     <Compile Include="Demystify\Internal\ILReader.cs" />
     <Compile Include="Demystify\Internal\ReflectionHelper.cs" />
-    <Compile Include="Demystify\Internal\StringBuilder.cs" />
+    <Compile Include="Demystify\InteropHelper.cs" />
     <Compile Include="Demystify\ResolvedMethod.cs" />
     <Compile Include="Demystify\ResolvedParameter.cs" />
-    <Compile Include="Demystify\StringBuilderExtensions.cs" />
+    <Compile Include="Demystify\StringBuilderExtentions.cs" />
     <Compile Include="Demystify\TypeNameHelper.cs" />
     <Compile Include="Demystify\ValueTupleResolvedParameter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

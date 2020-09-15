@@ -1,17 +1,15 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using DemystifyExceptions.Demystify.Internal;
+using System.Text;
 
-namespace DemystifyExceptions.Demystify
+namespace System.Diagnostics
 {
     // Adapted from https://github.com/aspnet/Common/blob/dev/shared/Microsoft.Extensions.TypeNameHelper.Sources/TypeNameHelper.cs
-    internal static class TypeNameHelper
+    public static class TypeNameHelper
     {
-        internal static readonly Dictionary<Type, string> BuiltInTypeNames = new Dictionary<Type, string>
+        public static readonly Dictionary<Type, string> BuiltInTypeNames = new Dictionary<Type, string>
         {
             {typeof(void), "void"},
             {typeof(bool), "bool"},
@@ -38,28 +36,27 @@ namespace DemystifyExceptions.Demystify
         /// <param name="fullName"><c>true</c> to print a fully qualified name.</param>
         /// <param name="includeGenericParameterNames"><c>true</c> to include generic parameter names.</param>
         /// <returns>The pretty printed type name.</returns>
-        internal static string GetTypeDisplayName(Type type, bool fullName = true,
+        public static string GetTypeDisplayName(Type type, bool fullName = true,
             bool includeGenericParameterNames = false)
         {
             var builder = new StringBuilder();
-            ProcessType(builder, type, fullName, includeGenericParameterNames);
+            ProcessType(builder, type, new DisplayNameOptions(fullName, includeGenericParameterNames));
             return builder.ToString();
         }
 
-        internal static StringBuilder AppendTypeDisplayName(this StringBuilder builder, Type type, bool fullName = true,
+        public static StringBuilder AppendTypeDisplayName(this StringBuilder builder, Type type, bool fullName = true,
             bool includeGenericParameterNames = false)
         {
-            ProcessType(builder, type, fullName, includeGenericParameterNames);
+            ProcessType(builder, type, new DisplayNameOptions(fullName, includeGenericParameterNames));
             return builder;
         }
 
         /// <summary>
         ///     Returns a name of given generic type without '`'.
         /// </summary>
-        internal static string GetTypeNameForGenericType(Type type)
+        public static string GetTypeNameForGenericType(Type type)
         {
-            if (!type.IsGenericType)
-                throw new ArgumentException("The given type should be generic", nameof(type));
+            if (!type.IsGenericType) throw new ArgumentException("The given type should be generic", nameof(type));
 
             var genericPartIndex = type.Name.IndexOf('`');
             Debug.Assert(genericPartIndex >= 0);
@@ -67,18 +64,25 @@ namespace DemystifyExceptions.Demystify
             return type.Name.Substring(0, genericPartIndex);
         }
 
-        private static void ProcessType(StringBuilder builder, Type type, bool FullName,
-            bool IncludeGenericParameterNames)
+        private static void ProcessType(StringBuilder builder, Type type, DisplayNameOptions options)
         {
             if (type.IsGenericType)
             {
-                var genericArguments = type.GetGenericArguments();
-                ProcessGenericType(builder, type, genericArguments, genericArguments.Length, FullName,
-                    IncludeGenericParameterNames);
+                var underlyingType = Nullable.GetUnderlyingType(type);
+                if (underlyingType != null)
+                {
+                    ProcessType(builder, underlyingType, options);
+                    builder.Append('?');
+                }
+                else
+                {
+                    var genericArguments = type.GetGenericArguments();
+                    ProcessGenericType(builder, type, genericArguments, genericArguments.Length, options);
+                }
             }
             else if (type.IsArray)
             {
-                ProcessArrayType(builder, type, FullName, IncludeGenericParameterNames);
+                ProcessArrayType(builder, type, options);
             }
             else if (BuiltInTypeNames.TryGetValue(type, out var builtInName))
             {
@@ -90,23 +94,20 @@ namespace DemystifyExceptions.Demystify
             }
             else if (type.IsGenericParameter)
             {
-                if (IncludeGenericParameterNames)
-                    builder.Append(type.Name);
+                if (options.IncludeGenericParameterNames) builder.Append(type.Name);
             }
             else
             {
-                builder.Append(FullName ? type.FullName ?? type.Name : type.Name);
+                builder.Append(options.FullName ? type.FullName ?? type.Name : type.Name);
             }
         }
 
-        private static void ProcessArrayType(StringBuilder builder, Type type, bool FullName,
-            bool IncludeGenericParameterNames)
+        private static void ProcessArrayType(StringBuilder builder, Type type, DisplayNameOptions options)
         {
             var innerType = type;
-            while (innerType.IsArray)
-                innerType = innerType.GetElementType();
+            while (innerType.IsArray) innerType = innerType.GetElementType();
 
-            ProcessType(builder, innerType, FullName, IncludeGenericParameterNames);
+            ProcessType(builder, innerType, options);
 
             while (type.IsArray)
             {
@@ -118,20 +119,17 @@ namespace DemystifyExceptions.Demystify
         }
 
         private static void ProcessGenericType(StringBuilder builder, Type type, Type[] genericArguments, int length,
-            bool FullName, bool IncludeGenericParameterNames)
+            DisplayNameOptions options)
         {
             var offset = 0;
-            if (type.IsNested)
-                offset = type.DeclaringType.GetGenericArguments().Length;
+            if (type.IsNested) offset = type.DeclaringType.GetGenericArguments().Length;
 
-            if (FullName)
+            if (options.FullName)
             {
                 if (type.IsNested)
                 {
-                    ProcessGenericType(builder, type.DeclaringType, genericArguments, offset, FullName,
-                        IncludeGenericParameterNames);
+                    ProcessGenericType(builder, type.DeclaringType, genericArguments, offset, options);
                     builder.Append('+');
-                    FullName = false;
                 }
                 else if (!string.IsNullOrEmpty(type.Namespace))
                 {
@@ -152,16 +150,28 @@ namespace DemystifyExceptions.Demystify
             builder.Append('<');
             for (var i = offset; i < length; i++)
             {
-                ProcessType(builder, genericArguments[i], FullName, IncludeGenericParameterNames);
-                if (i + 1 == length)
-                    continue;
+                ProcessType(builder, genericArguments[i], options);
+                if (i + 1 == length) continue;
 
                 builder.Append(',');
-                if (IncludeGenericParameterNames || !genericArguments[i + 1].IsGenericParameter)
+                if (options.IncludeGenericParameterNames || !genericArguments[i + 1].IsGenericParameter)
                     builder.Append(' ');
             }
 
             builder.Append('>');
+        }
+
+        private struct DisplayNameOptions
+        {
+            public DisplayNameOptions(bool fullName, bool includeGenericParameterNames)
+            {
+                FullName = fullName;
+                IncludeGenericParameterNames = includeGenericParameterNames;
+            }
+
+            public bool FullName { get; }
+
+            public bool IncludeGenericParameterNames { get; }
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using DemystifyExceptions.Demystify;
+using System.Diagnostics;
 using HarmonyLib;
 using Mono.Cecil;
 
@@ -14,7 +14,7 @@ namespace DemystifyExceptions
         {
             Harmony.CreateAndPatchAll(typeof(DemystifyPatcher), "org.bepinex.debug.demystifyexceptions");
         }
-    
+
         [HarmonyPatch(typeof(Exception), nameof(Exception.StackTrace), MethodType.Getter)]
         [HarmonyPrefix]
         public static bool ExceptionGetStackTrace(Exception __instance, ref string __result)
@@ -30,8 +30,8 @@ namespace DemystifyExceptions
                 return true;
             }
         }
-        
-        [HarmonyPatch(typeof(Exception), nameof(Exception.ToString))]
+
+        [HarmonyPatch(typeof(Exception), nameof(Exception.ToString), new Type[0])]
         [HarmonyPrefix]
         public static bool ExceptionToStringHook(Exception __instance, ref string __result)
         {

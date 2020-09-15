@@ -7,9 +7,20 @@ You need to have at least [BepInEx 5,x](https://github.com/BepInEx/BepInEx) inst
 
 ### DemystifyExceptions
 Turns exceptions into a more readable format. Resolves enumerators, lambdas and other complex structures.  
-Based on [Apkd.UnityDemystifier](https://github.com/apkd/Apkd.UnityDemystifier).
+Based on [Ben.Demystifier](https://github.com/benaadams/Ben.Demystifier).
 
 **How to use:** This is a preloader patcher. Put the compiled DLL into `BepInEx/patchers`. Requires BepInEx 5 (or BepInEx 4 with MonoMod.RuntimeDetour).
+
+### MirrorInternalLogs
+
+This preloader patcher allows to capture and mirror Unity internal debug logs (i.e. the contents of `output_log.txt`).  
+Preloader patch provides a public event one can listen to which will receive all Unity logs, including internal debug logs that are only output to `output_log.txt`.
+
+Unlike output log, which can be disabled in the game, this mirror will always capture said debug logs. If Unity already outputs `output_log.txt`, 
+this plugin will simply create a copy of it in a more accessible place that `%APPDATA%`.
+
+**How to use:** This is a preloader patcher. Put the compiled DLL into `BepInEx/patchers`.  
+By default, logs are output to `unity_log.txt`. This is configurable via `MirrorInternalLogs.cfg` configuration file that gets generated on the first run.
 
 ### Simple Mono Profiler
 A simple profiler that can be used in any Unity player build as long as it can run BepInEx 5.x. It can generate a .csv file with profiling results from an arbitrary length of time.
