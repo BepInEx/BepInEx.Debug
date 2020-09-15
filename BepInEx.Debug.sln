@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.852
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30128.74
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptEngine", "src\ScriptEngine\ScriptEngine.csproj", "{967C527C-1A7E-4C83-9427-E92A6092F59E}"
 EndProject
@@ -16,6 +16,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoProfilerLoader", "src\SimpleProfiler\MonoProfilerLoader\MonoProfilerLoader.csproj", "{A909BA1C-4C18-49CF-A4E8-60584B7F2200}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoProfilerController", "src\simpleprofiler\MonoProfilerController\MonoProfilerController.csproj", "{E643A810-00A8-4B6F-83FC-B8631257EB43}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConstructorProfiler", "src\ConstructorProfiler\ConstructorProfiler.csproj", "{241492BB-4F96-4286-B787-04B68BD44DDB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -98,6 +100,18 @@ Global
 		{E643A810-00A8-4B6F-83FC-B8631257EB43}.Release|x64.Build.0 = Release|Any CPU
 		{E643A810-00A8-4B6F-83FC-B8631257EB43}.Release|x86.ActiveCfg = Release|Any CPU
 		{E643A810-00A8-4B6F-83FC-B8631257EB43}.Release|x86.Build.0 = Release|Any CPU
+		{241492BB-4F96-4286-B787-04B68BD44DDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{241492BB-4F96-4286-B787-04B68BD44DDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{241492BB-4F96-4286-B787-04B68BD44DDB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{241492BB-4F96-4286-B787-04B68BD44DDB}.Debug|x64.Build.0 = Debug|Any CPU
+		{241492BB-4F96-4286-B787-04B68BD44DDB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{241492BB-4F96-4286-B787-04B68BD44DDB}.Debug|x86.Build.0 = Debug|Any CPU
+		{241492BB-4F96-4286-B787-04B68BD44DDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{241492BB-4F96-4286-B787-04B68BD44DDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{241492BB-4F96-4286-B787-04B68BD44DDB}.Release|x64.ActiveCfg = Release|Any CPU
+		{241492BB-4F96-4286-B787-04B68BD44DDB}.Release|x64.Build.0 = Release|Any CPU
+		{241492BB-4F96-4286-B787-04B68BD44DDB}.Release|x86.ActiveCfg = Release|Any CPU
+		{241492BB-4F96-4286-B787-04B68BD44DDB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
