@@ -32,13 +32,13 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BepInEx">
-      <HintPath>..\..\..\libs\bepinex5\BepInEx.dll</HintPath>
+    <Reference Include="BepInEx, Version=5.3.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\..\..\packages\BepInEx.Core.5.3.0\lib\net35\BepInEx.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Core" />
-    <Reference Include="UnityEngine">
-      <HintPath>..\..\..\libs\UnityEngine.dll</HintPath>
+    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\..\..\packages\UnityEngine.Core.5.6.0\lib\net35\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -52,6 +52,9 @@
       <Name>MonoProfilerLoader</Name>
       <Private>False</Private>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
