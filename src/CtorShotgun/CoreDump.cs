@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BepInEx;
+using BepInEx.Configuration;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
@@ -12,15 +14,17 @@ namespace CtorShotgun
 {
     public static class CoreDump
     {
-        private static string filename;
         private static TextWriter tickWriter;
 
-        //Edit the target assembly here (or add more). Assembly-CSharp.dll is always a safe bet (but not transferable between games)
-        public static IEnumerable<string> TargetDLLs { get; } = new[] { "Assembly-CSharp.dll" };
+        public static IEnumerable<string> TargetDLLs { get; set; }
 
         public static void Initialize()
         {
-            filename = Path.GetFullPath($"cctors_{DateTime.Now.Ticks}.log");
+            var config = new ConfigFile(Path.Combine(Paths.ConfigPath, "CtorShotgun.cfg"), true);
+            var targets = config.Bind("General", "Targets", "UnityEngine.dll, Assembly-CSharp.dll", "A comma delimited list of assemblies that will be patched");
+            TargetDLLs = targets.Value.Split(',').Select(x => x.Trim()).ToArray();
+
+            var filename = Path.GetFullPath($"cctors_{DateTime.Now.Ticks}.log");
             Trace.TraceInformation($"Writing cctor dump to {filename}");
 
             StreamWriter fs = File.CreateText(filename);
