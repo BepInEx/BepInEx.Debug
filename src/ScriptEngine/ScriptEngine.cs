@@ -5,6 +5,7 @@ using BepInEx.Logging;
 using Mono.Cecil;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -79,7 +80,7 @@ namespace ScriptEngine
 
                     try
                     {
-                        foreach (Type type in ass.GetTypes())
+                        foreach (Type type in GetTypesSafe(ass))
                         {
                             if (typeof(BaseUnityPlugin).IsAssignableFrom(type))
                             {
@@ -108,6 +109,18 @@ namespace ScriptEngine
                         Logger.LogError(sbMessage.ToString());
                     }
                 }
+            }
+        }
+
+        private static IEnumerable<Type> GetTypesSafe(Assembly ass)
+        {
+            try
+            {
+                return ass.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                return ex.Types.Where(x => x != null);
             }
         }
 
