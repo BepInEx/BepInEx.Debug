@@ -12,7 +12,7 @@ jobs:
     - name: Setup Nuget.exe
       uses: NuGet/setup-nuget@v1.0.5
     - name: Setup MSBuild.exe
-      uses: warrenbuckley/Setup-MSBuild@v1
+      uses: microsoft/setup-msbuild@v1
     - name: Restore
       working-directory: .
       run: nuget restore
