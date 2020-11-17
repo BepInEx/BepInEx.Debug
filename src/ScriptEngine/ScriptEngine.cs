@@ -78,35 +78,21 @@ namespace ScriptEngine
                     dll.Write(ms);
                     var ass = Assembly.Load(ms.ToArray());
 
-                    try
+                    foreach (Type type in GetTypesSafe(ass))
                     {
-                        foreach (Type type in GetTypesSafe(ass))
+                        if (typeof(BaseUnityPlugin).IsAssignableFrom(type))
                         {
-                            if (typeof(BaseUnityPlugin).IsAssignableFrom(type))
+                            var metadata = MetadataHelper.GetMetadata(type);
+                            if (metadata != null)
                             {
-                                var metadata = MetadataHelper.GetMetadata(type);
-                                if (metadata != null)
-                                {
-                                    var typeDefinition = dll.MainModule.Types.First(x => x.FullName == type.FullName);
-                                    var typeInfo = Chainloader.ToPluginInfo(typeDefinition);
-                                    Chainloader.PluginInfos[metadata.GUID] = typeInfo;
+                                var typeDefinition = dll.MainModule.Types.First(x => x.FullName == type.FullName);
+                                var typeInfo = Chainloader.ToPluginInfo(typeDefinition);
+                                Chainloader.PluginInfos[metadata.GUID] = typeInfo;
 
-                                    Logger.Log(LogLevel.Info, $"Reloading {metadata.GUID}");
-                                    StartCoroutine(DelayAction(() => obj.AddComponent(type)));
-                                }
+                                Logger.Log(LogLevel.Info, $"Reloading {metadata.GUID}");
+                                StartCoroutine(DelayAction(() => obj.AddComponent(type)));
                             }
                         }
-                    }
-                    catch (ReflectionTypeLoadException e)
-                    {
-                        var sbMessage = new StringBuilder();
-                        sbMessage.AppendLine($"Error while loading {path}");
-                        sbMessage.AppendLine("\r\n-- LoaderExceptions --");
-                        foreach (var l in e.LoaderExceptions)
-                            sbMessage.AppendLine(l.ToString());
-                        sbMessage.AppendLine("\r\n-- StackTrace --");
-                        sbMessage.AppendLine(e.StackTrace);
-                        Logger.LogError(sbMessage.ToString());
                     }
                 }
             }
@@ -120,6 +106,14 @@ namespace ScriptEngine
             }
             catch (ReflectionTypeLoadException ex)
             {
+                var sbMessage = new StringBuilder();
+                sbMessage.AppendLine($"Error while loading {path}");
+                sbMessage.AppendLine("\r\n-- LoaderExceptions --");
+                foreach (var l in e.LoaderExceptions)
+                    sbMessage.AppendLine(l.ToString());
+                sbMessage.AppendLine("\r\n-- StackTrace --");
+                sbMessage.AppendLine(e.StackTrace);
+                Logger.LogError(sbMessage.ToString());
                 return ex.Types.Where(x => x != null);
             }
         }
