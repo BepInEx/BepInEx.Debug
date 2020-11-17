@@ -44,6 +44,7 @@ namespace ScriptEngine
 
         void ReloadPlugins()
         {
+            Logger.Log(LogLevel.Info, "Unloading old plugin instances");
             Destroy(scriptManager);
             scriptManager = new GameObject($"ScriptEngine_{DateTime.Now.Ticks}");
             DontDestroyOnLoad(scriptManager);
@@ -54,7 +55,7 @@ namespace ScriptEngine
                 foreach(string path in Directory.GetFiles(ScriptDirectory, "*.dll"))
                     LoadDLL(path, scriptManager);
 
-                Logger.LogMessage("Reloaded script plugins!");
+                Logger.LogMessage("Reloaded all plugins!");
             }
             else
             {
@@ -68,6 +69,8 @@ namespace ScriptEngine
             defaultResolver.AddSearchDirectory(ScriptDirectory);
             defaultResolver.AddSearchDirectory(Paths.ManagedPath);
             defaultResolver.AddSearchDirectory(Paths.BepInExAssemblyDirectory);
+
+            Logger.Log(LogLevel.Info, $"Loading plugins from {path}");
 
             using(var dll = AssemblyDefinition.ReadAssembly(path, new ReaderParameters { AssemblyResolver = defaultResolver }))
             {
@@ -89,7 +92,7 @@ namespace ScriptEngine
                                 var typeInfo = Chainloader.ToPluginInfo(typeDefinition);
                                 Chainloader.PluginInfos[metadata.GUID] = typeInfo;
 
-                                Logger.Log(LogLevel.Info, $"Reloading {metadata.GUID}");
+                                Logger.Log(LogLevel.Info, $"Loading {metadata.GUID}");
                                 StartCoroutine(DelayAction(() => obj.AddComponent(type)));
                             }
                         }
@@ -98,7 +101,7 @@ namespace ScriptEngine
             }
         }
 
-        private static IEnumerable<Type> GetTypesSafe(Assembly ass)
+        private IEnumerable<Type> GetTypesSafe(Assembly ass)
         {
             try
             {
@@ -107,12 +110,11 @@ namespace ScriptEngine
             catch (ReflectionTypeLoadException ex)
             {
                 var sbMessage = new StringBuilder();
-                sbMessage.AppendLine($"Error while loading {path}");
                 sbMessage.AppendLine("\r\n-- LoaderExceptions --");
-                foreach (var l in e.LoaderExceptions)
+                foreach (var l in ex.LoaderExceptions)
                     sbMessage.AppendLine(l.ToString());
                 sbMessage.AppendLine("\r\n-- StackTrace --");
-                sbMessage.AppendLine(e.StackTrace);
+                sbMessage.AppendLine(ex.StackTrace);
                 Logger.LogError(sbMessage.ToString());
                 return ex.Types.Where(x => x != null);
             }
