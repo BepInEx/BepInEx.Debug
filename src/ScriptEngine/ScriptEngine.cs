@@ -32,13 +32,13 @@ namespace ScriptEngine
             LoadOnStart = Config.Bind("General", "LoadOnStart", false, new ConfigDescription("Load all plugins from the scripts folder when starting the application"));
             ReloadKey = Config.Bind("General", "ReloadKey", new KeyboardShortcut(KeyCode.F6), new ConfigDescription("Press this key to reload all the plugins from the scripts folder"));
 
-            if(LoadOnStart.Value)
+            if (LoadOnStart.Value)
                 ReloadPlugins();
         }
 
         void Update()
         {
-            if(ReloadKey.Value.IsDown())
+            if (ReloadKey.Value.IsDown())
                 ReloadPlugins();
         }
 
@@ -50,9 +50,9 @@ namespace ScriptEngine
             DontDestroyOnLoad(scriptManager);
 
             var files = Directory.GetFiles(ScriptDirectory, "*.dll");
-            if(files.Length > 0)
+            if (files.Length > 0)
             {
-                foreach(string path in Directory.GetFiles(ScriptDirectory, "*.dll"))
+                foreach (string path in Directory.GetFiles(ScriptDirectory, "*.dll"))
                     LoadDLL(path, scriptManager);
 
                 Logger.LogMessage("Reloaded all plugins!");
@@ -72,29 +72,46 @@ namespace ScriptEngine
 
             Logger.Log(LogLevel.Info, $"Loading plugins from {path}");
 
-            using(var dll = AssemblyDefinition.ReadAssembly(path, new ReaderParameters { AssemblyResolver = defaultResolver }))
+            using (var dll = AssemblyDefinition.ReadAssembly(path, new ReaderParameters { AssemblyResolver = defaultResolver }))
             {
                 dll.Name.Name = $"{dll.Name.Name}-{DateTime.Now.Ticks}";
 
-                using(var ms = new MemoryStream())
+                using (var ms = new MemoryStream())
                 {
                     dll.Write(ms);
                     var ass = Assembly.Load(ms.ToArray());
 
                     foreach (Type type in GetTypesSafe(ass))
                     {
-                        if (typeof(BaseUnityPlugin).IsAssignableFrom(type))
+                        try
                         {
-                            var metadata = MetadataHelper.GetMetadata(type);
-                            if (metadata != null)
+                            if (typeof(BaseUnityPlugin).IsAssignableFrom(type))
                             {
-                                var typeDefinition = dll.MainModule.Types.First(x => x.FullName == type.FullName);
-                                var typeInfo = Chainloader.ToPluginInfo(typeDefinition);
-                                Chainloader.PluginInfos[metadata.GUID] = typeInfo;
+                                var metadata = MetadataHelper.GetMetadata(type);
+                                if (metadata != null)
+                                {
+                                    var typeDefinition = dll.MainModule.Types.First(x => x.FullName == type.FullName);
+                                    var typeInfo = Chainloader.ToPluginInfo(typeDefinition);
+                                    Chainloader.PluginInfos[metadata.GUID] = typeInfo;
 
-                                Logger.Log(LogLevel.Info, $"Loading {metadata.GUID}");
-                                StartCoroutine(DelayAction(() => obj.AddComponent(type)));
+                                    Logger.Log(LogLevel.Info, $"Loading {metadata.GUID}");
+                                    StartCoroutine(DelayAction(() =>
+                                    {
+                                        try
+                                        {
+                                            obj.AddComponent(type);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Logger.LogError($"Failed to load plugin {metadata.GUID} because of exception: {e}");
+                                        }
+                                    }));
+                                }
                             }
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.LogError($"Failed to load plugin {type.Name} because of exception: {e}");
                         }
                     }
                 }
