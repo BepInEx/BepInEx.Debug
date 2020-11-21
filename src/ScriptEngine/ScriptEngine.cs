@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Common;
 using UnityEngine;
 
 namespace ScriptEngine
@@ -18,7 +19,7 @@ namespace ScriptEngine
     public class ScriptEngine : BaseUnityPlugin
     {
         public const string GUID = "com.bepis.bepinex.scriptengine";
-        public const string Version = "1.0.1";
+        public const string Version = Metadata.Version;
 
         public string ScriptDirectory => Path.Combine(Paths.BepInExRootPath, "scripts");
 

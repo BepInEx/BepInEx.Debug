@@ -2,14 +2,16 @@
 using System.IO;
 using BepInEx;
 using BepInEx.Configuration;
+using Common;
 using UnityEngine;
 
 namespace MonoProfiler
 {
-    [BepInPlugin("MonoProfiler", "MonoProfiler Controller", Version)]
+    [BepInPlugin(GUID, "MonoProfiler Controller", Version)]
     public class MonoProfilerController : BaseUnityPlugin
     {
-        public const string Version = "1.1";
+        public const string GUID = "MonoProfiler";
+        public const string Version = Metadata.Version;
 
         private ConfigEntry<bool> _uniqueNames;
         private ConfigEntry<KeyboardShortcut> _key;
@@ -32,7 +34,7 @@ namespace MonoProfiler
             if (_key.Value.IsDown())
             {
                 var dumpFile = MonoProfilerPatcher.RunProfilerDump();
-                if(_uniqueNames.Value)
+                if (_uniqueNames.Value)
                     dumpFile.MoveTo(Path.Combine(dumpFile.DirectoryName, $"{Path.GetFileNameWithoutExtension(dumpFile.Name)}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}{dumpFile.Extension}"));
                 Logger.LogMessage("Saved profiler dump to " + dumpFile.FullName);
             }

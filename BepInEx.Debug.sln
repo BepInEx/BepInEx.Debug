@@ -23,7 +23,20 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MirrorInternalLogs", "src\M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CtorShotgun", "src\CtorShotgun\CtorShotgun.csproj", "{B168EEDB-82B6-445B-AD19-96214B0D6537}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Common", "src\Common\Common.shproj", "{DC4E3630-F21D-479F-9071-9FF62BCC7BB7}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\Common\Common.projitems*{241492bb-4f96-4286-b787-04b68bd44ddb}*SharedItemsImports = 4
+		src\Common\Common.projitems*{29571930-f2e9-45dc-bb65-5b60c2b16850}*SharedItemsImports = 4
+		src\Common\Common.projitems*{6081c5ae-ab5a-456b-a29f-3eef9ad9eedf}*SharedItemsImports = 4
+		src\Common\Common.projitems*{679f65cb-10e1-4858-84d5-78d7a993facd}*SharedItemsImports = 4
+		src\Common\Common.projitems*{967c527c-1a7e-4c83-9427-e92a6092f59e}*SharedItemsImports = 4
+		src\Common\Common.projitems*{a909ba1c-4c18-49cf-a4e8-60584b7f2200}*SharedItemsImports = 4
+		src\Common\Common.projitems*{b168eedb-82b6-445b-ad19-96214b0d6537}*SharedItemsImports = 4
+		src\Common\Common.projitems*{dc4e3630-f21d-479f-9071-9ff62bcc7bb7}*SharedItemsImports = 13
+		src\Common\Common.projitems*{e643a810-00a8-4b6f-83fc-b8631257eb43}*SharedItemsImports = 4
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64

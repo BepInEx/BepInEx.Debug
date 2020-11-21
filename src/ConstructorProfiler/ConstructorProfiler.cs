@@ -7,12 +7,16 @@ using System.Reflection;
 using System.Diagnostics;
 using HarmonyLib;
 using System.IO;
+using Common;
 
 namespace ConstructorProfiler
 {
-    [BepInPlugin("keelhauled.constructorprofiler", "Constructor Profiler", "1.0.0")]
+    [BepInPlugin(GUID, "Constructor Profiler", Version)]
     public class ConstructorProfiler : BaseUnityPlugin
     {
+        public const string GUID = "keelhauled.constructorprofiler";
+        public const string Version = Metadata.Version;
+
         private static string[] AssFilter = new[] { "Assembly-CSharp", "UnityEngine" };
         private static Dictionary<string, StackData> CallCounter = new Dictionary<string, StackData>();
         private Harmony harmony = new Harmony(nameof(ConstructorProfiler));
