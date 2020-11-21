@@ -47,6 +47,17 @@ Also reports the total time spent in all plugins during these methods and the to
 
 **How to use:** This is a preloader patcher. Put the compiled DLL into `BepInEx/patchers`. Requires BepInEx 5 (or BepInEx 4 with MonoMod.RuntimeDetour).
 
+### CtorShotgun
+A tool for determining initialization order of game clases. Useful for finding an optimal BepInEx entry point. 
+
+**How to use:** This is a preloader patcher. Put the compiled DLL into `BepInEx/patchers`. Requires BepInEx 5. Find what looks like a good time for BepInEx to start initializing plugins and put it into `BepInEx.cfg`. If things crash, it's too early. If game code runs before it can be patched, it's too late.
+
+### ConstructorProfiler
+A simple profiler that counts the amount of objects being created (it counts constructor hits). Useful for determining sources of unnecessary allocations and subsequent garbage pressure on the GC (garbage collector) which can result in random stutters. Unlike Simple Mono Profiler, this is implemented as a plugin that uses patches instead of a full-blown profiler.
+
+**Warning:** This does not work all that well and requires tweaking of the source code to fit your use case. Simple Mono Profiler is much more powerful and able to do the same work, so use it if you can and simply filter its results by `.ctor`.
+
+**How to use:** This is a preloader patcher. Put the compiled DLL into `BepInEx/plugins`. Requires BepInEx 5.
 
 ## External tools and resources
 
