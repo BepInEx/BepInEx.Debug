@@ -57,7 +57,10 @@ static void method_enter(void* prof, void* method)
 		if (it == profilerInfo.end())
 			profilerInfo[method] = ProfilerInfo(method);
 		else
+		{
 			it->second.calls++;
+			it->second.push_thread();
+		}
 	}
 	mut.unlock();
 }
