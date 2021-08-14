@@ -8,40 +8,134 @@
 #include <functional>
 #include <mutex>
 
-std::mutex mut;
+using namespace std::chrono;
 
-static void dump()
+struct MethodStats
 {
-	mut.lock();
-	std::ofstream fs;
+	uint64_t call_count = 0;
+	nanoseconds total_runtime = nanoseconds(0);
+};
 
-	fs.open("MonoProfilerOutput.csv", std::fstream::out | std::fstream::trunc);
+struct StackEntry
+{
+	void* method;
+	time_point<high_resolution_clock> entry_time;
+};
 
-	std::vector<std::reference_wrapper<ProfilerInfo>> infos;
-	for (auto&[key, val] : profilerInfo)
-		infos.push_back(std::ref(val));
+// Per-thread profiler info.
+struct ThreadProfilerInfo
+{
+	using table_t = std::unordered_map<void*, MethodStats>;
+	std::mutex stats_mut;
+	table_t table; // Needs lock: stats_mut
 
-	//Lambda sort on profilerinfo.calls
-	sort(infos.begin(), infos.end(), [=](ProfilerInfo& a, ProfilerInfo& b) {
-		return a.totalRuntime.count() > b.totalRuntime.count();
-	});
+	const uint32_t thread_id;
 
-	fs << "\"Call count\",\"Method name\",\"Total runtime (ns)\"" << std::endl;
+	std::vector<StackEntry> stack; // Used exclusively by the owner thread. Needs lock: none
 
-	//Dump into csv
-	for (auto& it : infos)
+	static std::mutex all_instances_mut;
+	static std::set<ThreadProfilerInfo*> all_instances; // Needs lock: all_instances_mut
+
+	ThreadProfilerInfo()
+		: thread_id(mono_thread_current()->small_id)
 	{
-		auto pi = it.get();
-		//auto rt = duration_cast<milliseconds>(pi.totalRuntime).count();
-		fs << pi.calls << ",\"" << pi.name << "\"," << pi.totalRuntime.count() << std::endl;
+		stack.reserve(100);
+
+		std::lock_guard guard(all_instances_mut);
+		all_instances.insert(this);
 	}
 
-	fs.close();
+	~ThreadProfilerInfo()
+	{
+		std::lock_guard guard(all_instances_mut);
+		all_instances.erase(this);
+	}
 
-	profilerInfo.clear();
+	void enter_method(void* method)
+	{
+		stack.push_back(StackEntry{ method, high_resolution_clock::now() });
+	}
 
-	mut.unlock();
-}
+	void leave_method(void* method)
+	{
+		auto now = high_resolution_clock::now();
+		if (stack.empty())
+			return;
+
+		StackEntry top = stack.back();
+		stack.pop_back();
+
+		if (method != top.method)
+			return;
+
+		std::lock_guard guard(stats_mut);
+		table_t::iterator it = table.find(method);
+		if (it == table.end())
+		{
+			it = table.insert({ method, {} }).first;
+		}
+
+		it->second.total_runtime += now - top.entry_time;
+		it->second.call_count++;
+	}
+
+	table_t get_table()
+	{
+		std::lock_guard guard(stats_mut);
+		table_t ret(std::move(table));
+		table.clear();
+		return ret;
+	}
+
+	static void dump()
+	{
+		table_t total_table;
+		{
+			std::lock_guard guard(all_instances_mut);
+			for (auto& thread_info : all_instances)
+			{
+				table_t thread_table(thread_info->get_table());
+				for (const auto& entry : thread_table)
+				{
+					auto it = total_table.find(entry.first);
+					if (it == total_table.end())
+						total_table.insert(entry);
+					else
+					{
+						it->second.call_count += entry.second.call_count;
+						it->second.total_runtime += entry.second.total_runtime;
+					}
+				}
+			}
+		}
+
+		std::ofstream fs;
+
+		fs.open("MonoProfilerOutput.csv", std::fstream::out | std::fstream::trunc);
+
+		std::vector<std::pair<void*, MethodStats>> entries(total_table.begin(), total_table.end());
+
+		//Sort by time
+		sort(entries.begin(), entries.end(), [=](auto& a, auto& b) {
+			return a.second.total_runtime.count() > b.second.total_runtime.count();
+		});
+
+		fs << "\"Call count\",\"Method name\",\"Total runtime (ns)\"" << std::endl;
+
+		//Dump into csv
+		for (auto& it : entries)
+		{
+			fs << it.second.call_count << ",\"" << mono_method_full_name(it.first) << "\"," << it.second.total_runtime.count() << std::endl;
+		}
+
+		fs.close();
+	}
+};
+
+std::mutex ThreadProfilerInfo::all_instances_mut;
+std::set<ThreadProfilerInfo*> ThreadProfilerInfo::all_instances;
+
+static thread_local ThreadProfilerInfo* thread_profiler_info;
 
 static void shutdown(void* prof)
 {
@@ -50,32 +144,25 @@ static void shutdown(void* prof)
 
 static void method_enter(void* prof, void* method)
 {
-	mut.lock();
-	if (method)
+	if (!thread_profiler_info)
 	{
-		auto it = profilerInfo.find(method);
-		if (it == profilerInfo.end())
-			profilerInfo[method] = ProfilerInfo(method);
-		else
-		{
-			it->second.calls++;
-			it->second.push_thread();
-		}
+		thread_profiler_info = new ThreadProfilerInfo();
 	}
-	mut.unlock();
+	thread_profiler_info->enter_method(method);
 }
 
 
 static void method_leave(void* prof, void* method)
 {
-	mut.lock();
-	if (method)
-	{
-		auto it = profilerInfo.find(method);
-		if (it != profilerInfo.end())
-			it->second.pop_thread();
-	}
-	mut.unlock();
+	if (thread_profiler_info)
+		thread_profiler_info->leave_method(method);
+}
+
+static void thread_detach()
+{
+	if (thread_profiler_info)
+		delete thread_profiler_info;
+	thread_profiler_info = nullptr;
 }
 
 
@@ -92,7 +179,7 @@ extern "C" void __declspec(dllexport) AddProfiler(HMODULE mono)
 
 extern "C" void __declspec(dllexport) Dump()
 {
-	dump();
+	ThreadProfilerInfo::dump();
 }
 
 
@@ -100,5 +187,7 @@ BOOL WINAPI DllMain(HINSTANCE /* hInstDll */, DWORD reasonForDllLoad, LPVOID /* 
 {
 	if (reasonForDllLoad == DLL_PROCESS_DETACH)
 		shutdown(NULL);
+	else if (reasonForDllLoad == DLL_THREAD_DETACH)
+		thread_detach();
 	return TRUE;
 }
