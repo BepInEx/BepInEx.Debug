@@ -6,8 +6,6 @@
 #include <time.h>
 #include <Windows.h> // Windows Platform SDK
 
-using namespace std::chrono;
-
 #define MONO_FUN(name, ret, ...) \
 	typedef ret (*name##_t)(__VA_ARGS__); \
 	static name##_t name;
@@ -85,46 +83,12 @@ struct _MonoThread {
 MONO_FUN(mono_thread_current, _MonoThread*);
 MONO_FUN(mono_method_full_name, char*, void* method);
 
-struct ProfilerInfo
-{
-	std::map<uint32_t, time_point<steady_clock>> threadTiming;
-
-	char* name;
-	uint64_t calls = 1;
-
-	nanoseconds totalRuntime = nanoseconds(0);
-
-	ProfilerInfo() : name((char*)"__NULL__") { }
-
-	ProfilerInfo(void* method)
-	{
-		name = mono_method_full_name(method);
-		push_thread();
-	}
-
-	void push_thread()
-	{
-		threadTiming[mono_thread_current()->small_id] = high_resolution_clock::now();
-	}
-
-	void pop_thread()
-	{
-		auto k = threadTiming.find(mono_thread_current()->small_id);
-		if (k != threadTiming.end())
-		{
-			totalRuntime += (high_resolution_clock::now() - k->second);
-			threadTiming.erase(k);
-		}
-	}
-};
-
 //struct MonoProfiler
 //{
 //	std::map<void*, ProfilerInfo> profilerInfo;
 //};
 
 //static MonoProfiler* prof;
-static std::map<void*, ProfilerInfo> profilerInfo;
 
 typedef enum
 {
