@@ -33,6 +33,8 @@ You can use LibreOffice Calc or Excel to view the dumped .csv results. Using Cal
 
 **Warning:** The profiler always runs and will noticeably slow down the game. To turn the profiler off you have to close the game and rename MonoProfiler dll to something else like `_MonoProfiler32.dll`. You need the correct version of `MonoProfiler.dll` for your game (either 32 or 64 bit).
 
+**Warning:** Due to the way allocations are measured, the provided numbers are just rough estimates. In particular, any allocations that happen in other threads during the runtime of the method are usually included in the number.
+
 ### ScriptEngine
 Loads and reloads BepInEx plugins from the `BepInEx\scripts` folder. User can reload all of these plugins by pressing the keyboard shortcut defined in the config. Shortcut is F6 by default.  
 Very useful for quickly developing plugins as you don't have to keep reopening the game to see your changes.

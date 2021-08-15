@@ -122,6 +122,7 @@ typedef void (*MonoProfileMethodFunc)(void* prof, void* method);
 MONO_FUN(mono_profiler_install, void, void* prof, MonoProfileFunc shutdown_callback);
 MONO_FUN(mono_profiler_set_events, void, MonoProfileFlags events);
 MONO_FUN(mono_profiler_install_enter_leave, void, MonoProfileMethodFunc enter, MonoProfileMethodFunc fleave);
+MONO_FUN(mono_gc_get_used_size, uint64_t);
 
 inline void init_mono_funcs(HMODULE mono)
 {
@@ -132,6 +133,7 @@ inline void init_mono_funcs(HMODULE mono)
 	GET_FUN(mono_profiler_set_events);
 	GET_FUN(mono_profiler_install_enter_leave);
 	GET_FUN(mono_thread_current);
+	GET_FUN(mono_gc_get_used_size);
 
 #undef GET_FUN
 }
