@@ -13,6 +13,7 @@ using namespace std::chrono;
 struct MethodStats
 {
 	uint64_t call_count = 0;
+	uint64_t total_allocation = 0;
 	nanoseconds total_runtime = nanoseconds(0);
 };
 
@@ -20,6 +21,7 @@ struct StackEntry
 {
 	void* method;
 	time_point<high_resolution_clock> entry_time;
+	uint64_t entry_alloc;
 };
 
 // Per-thread profiler info.
@@ -53,7 +55,7 @@ struct ThreadProfilerInfo
 
 	void enter_method(void* method)
 	{
-		stack.push_back(StackEntry{ method, high_resolution_clock::now() });
+		stack.push_back(StackEntry{ method, high_resolution_clock::now(), mono_gc_get_used_size() });
 	}
 
 	void leave_method(void* method)
@@ -77,6 +79,14 @@ struct ThreadProfilerInfo
 
 		it->second.total_runtime += now - top.entry_time;
 		it->second.call_count++;
+		uint64_t used_size = mono_gc_get_used_size();
+		// If a GC has happened since the method was entered, our allocation
+		// estimate will be messed up. Here we use a simple heuristic:
+		// ignore any negative allocation number.
+		if (used_size > top.entry_alloc)
+		{
+			it->second.total_allocation += used_size - top.entry_alloc;
+		}
 	}
 
 	table_t get_table()
@@ -120,12 +130,13 @@ struct ThreadProfilerInfo
 			return a.second.total_runtime.count() > b.second.total_runtime.count();
 		});
 
-		fs << "\"Call count\",\"Method name\",\"Total runtime (ns)\"" << std::endl;
+		fs << "\"Call count\",\"Method name\",\"Total runtime (ns)\",\"Total allocation (bytes)\"" << std::endl;
 
 		//Dump into csv
 		for (auto& it : entries)
 		{
-			fs << it.second.call_count << ",\"" << mono_method_full_name(it.first) << "\"," << it.second.total_runtime.count() << std::endl;
+			fs << it.second.call_count << ",\"" << mono_method_full_name(it.first) << "\"," <<
+				it.second.total_runtime.count() << "," << it.second.total_allocation << std::endl;
 		}
 
 		fs.close();
@@ -164,7 +175,6 @@ static void thread_detach()
 		delete thread_profiler_info;
 	thread_profiler_info = nullptr;
 }
-
 
 extern "C" void __declspec(dllexport) AddProfiler(HMODULE mono)
 {
