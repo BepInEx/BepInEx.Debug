@@ -97,9 +97,18 @@ struct ThreadProfilerInfo
 		return ret;
 	}
 
+	struct Row
+	{
+		uint32_t thread_id;
+		const char* name;
+		uint64_t count;
+		int64_t total_runtime;
+		uint64_t total_allocation;
+	};
+
 	static void dump()
 	{
-		table_t total_table;
+		std::vector<Row> rows;
 		{
 			std::lock_guard guard(all_instances_mut);
 			for (auto& thread_info : all_instances)
@@ -107,14 +116,12 @@ struct ThreadProfilerInfo
 				table_t thread_table(thread_info->get_table());
 				for (const auto& entry : thread_table)
 				{
-					auto it = total_table.find(entry.first);
-					if (it == total_table.end())
-						total_table.insert(entry);
-					else
-					{
-						it->second.call_count += entry.second.call_count;
-						it->second.total_runtime += entry.second.total_runtime;
-					}
+					rows.push_back(Row{
+						.thread_id = thread_info->thread_id,
+						.name = mono_method_full_name(entry.first),
+						.count = entry.second.call_count,
+						.total_runtime = entry.second.total_runtime.count(),
+						.total_allocation = entry.second.total_allocation });
 				}
 			}
 		}
@@ -123,20 +130,19 @@ struct ThreadProfilerInfo
 
 		fs.open("MonoProfilerOutput.csv", std::fstream::out | std::fstream::trunc);
 
-		std::vector<std::pair<void*, MethodStats>> entries(total_table.begin(), total_table.end());
 
 		//Sort by time
-		sort(entries.begin(), entries.end(), [=](auto& a, auto& b) {
-			return a.second.total_runtime.count() > b.second.total_runtime.count();
+		sort(rows.begin(), rows.end(), [=](auto& a, auto& b) {
+			return a.total_runtime > b.total_runtime;
 		});
 
-		fs << "\"Call count\",\"Method name\",\"Total runtime (ns)\",\"Total allocation (bytes)\"" << std::endl;
+		fs << "\"Thread\",\"Call count\",\"Method name\",\"Total runtime (ns)\",\"Total allocation (bytes)\"" << std::endl;
 
 		//Dump into csv
-		for (auto& it : entries)
+		for (auto& it : rows)
 		{
-			fs << it.second.call_count << ",\"" << mono_method_full_name(it.first) << "\"," <<
-				it.second.total_runtime.count() << "," << it.second.total_allocation << std::endl;
+			fs << it.thread_id << "," << it.count << ",\"" << it.name << "\"," <<
+				it.total_runtime << "," << it.total_allocation << std::endl;
 		}
 
 		fs.close();
