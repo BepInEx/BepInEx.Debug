@@ -10,16 +10,14 @@ namespace MirrorInternalLogs.Util
 {
     internal interface IPatch
     {
-        void Apply(IntPtr from);
         BytePattern Pattern { get; }
+        void Apply(IntPtr from);
     }
-    
+
     internal class InternalLogPatch<T> : IPatch where T : Delegate
     {
         private static T original;
-        private T target;
-        
-        public BytePattern Pattern { get; }
+        private readonly T target;
 
         public InternalLogPatch(BytePattern pattern, T target)
         {
@@ -39,7 +37,9 @@ namespace MirrorInternalLogs.Util
             if (invoke.ReturnType != typeof(void))
                 il.Emit(OpCodes.Pop);
 
-            il.Emit(OpCodes.Ldsfld, typeof(InternalLogPatch<T>).GetField("original", BindingFlags.NonPublic | BindingFlags.Static) ?? throw new Exception("Could not find `original` field"));
+            il.Emit(OpCodes.Ldsfld,
+                typeof(InternalLogPatch<T>).GetField("original", BindingFlags.NonPublic | BindingFlags.Static) ??
+                throw new Exception("Could not find `original` field"));
             for (var index = 0; index < callParams.Length; index++)
                 il.Emit(OpCodes.Ldarg, index);
             il.Emit(OpCodes.Call, invoke);
@@ -48,10 +48,12 @@ namespace MirrorInternalLogs.Util
             this.target = (T)dmd.Generate().CreateDelegate(typeof(T));
         }
 
+        public BytePattern Pattern { get; }
+
         public void Apply(IntPtr from)
         {
             var hookPtr = Marshal.GetFunctionPointerForDelegate(target);
-            var det = new NativeDetour(from, hookPtr, new NativeDetourConfig {ManualApply = true});
+            var det = new NativeDetour(from, hookPtr, new NativeDetourConfig { ManualApply = true });
             original = det.GenerateTrampoline<T>();
             det.Apply();
         }

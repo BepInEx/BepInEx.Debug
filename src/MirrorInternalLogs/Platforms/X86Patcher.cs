@@ -55,7 +55,7 @@ namespace MirrorInternalLogs.Platforms
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void PrintFDelegate(uint type, IntPtr pattern, IntPtr parts);
-        
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void PrintFDelegateNoType(IntPtr pattern, IntPtr parts);
     }

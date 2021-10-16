@@ -16,13 +16,18 @@ namespace MirrorInternalLogs.Util
         public static byte?[] ParseHexBytes(this string str, out string name)
         {
             name = string.Empty;
-            static bool IsHexChar(char lowerC) => '0' <= lowerC && lowerC <= '9' || 'a' <= lowerC && lowerC <= 'f';
+
+            static bool IsHexChar(char lowerC)
+            {
+                return '0' <= lowerC && lowerC <= '9' || 'a' <= lowerC && lowerC <= 'f';
+            }
+
             var result = new List<byte?>();
 
             var sr = new StringReader(str);
             while (sr.Peek() > 0)
             {
-                var c = char.ToLower((char) sr.Read());
+                var c = char.ToLower((char)sr.Read());
 
                 if (char.IsWhiteSpace(c))
                     continue;
@@ -41,7 +46,7 @@ namespace MirrorInternalLogs.Util
                 }
                 else if (IsHexChar(c) && sr.Peek() > 0)
                 {
-                    var other = char.ToLower((char) sr.Peek());
+                    var other = char.ToLower((char)sr.Peek());
                     if (!IsHexChar(other)) continue;
                     sr.Read();
                     result.Add(byte.Parse($"{c}{other}", NumberStyles.HexNumber));

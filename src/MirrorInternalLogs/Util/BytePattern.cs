@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Globalization;
-using System.Linq;
 
 namespace MirrorInternalLogs.Util
 {
@@ -8,8 +6,6 @@ namespace MirrorInternalLogs.Util
     {
         private readonly byte?[] pattern;
         private int[] jumpTable;
-        
-        public string Name { get; }
 
         public BytePattern(string bytes)
         {
@@ -17,6 +13,8 @@ namespace MirrorInternalLogs.Util
             Name = name;
             CreateJumpTable();
         }
+
+        public string Name { get; }
 
         public int Length => pattern.Length;
 
@@ -46,7 +44,7 @@ namespace MirrorInternalLogs.Util
 
         public unsafe int Match(IntPtr start, int maxSize)
         {
-            var ptr = (byte*) start.ToPointer();
+            var ptr = (byte*)start.ToPointer();
             for (int j = 0, k = 0; j < maxSize;)
                 if (pattern[k] == null || ptr[j] == pattern[k])
                 {

@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using MirrorInternalLogs.Util;
-using MonoMod.RuntimeDetour;
 
 namespace MirrorInternalLogs.Platforms
 {
     internal class X64Patcher : PatcherBase
     {
-
         protected override IPatch[] Patterns { get; } =
         {
             new InternalLogPatch<PrintFDelegate>(
@@ -45,12 +43,12 @@ namespace MirrorInternalLogs.Platforms
                 48 8B D7                                ; mov     rdx, rdi
                 48 8B CB                                ; mov     rcx, rbx
                 E8                                      ; call
-            ", InternalUnityLogger.OnLogHook),
+            ", InternalUnityLogger.OnLogHook)
         };
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void PrintFDelegate(ulong type, IntPtr pattern, IntPtr parts);
-        
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void PrintFDelegateNoType(IntPtr pattern, IntPtr parts);
     }

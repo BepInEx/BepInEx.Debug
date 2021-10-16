@@ -60,7 +60,8 @@ namespace MirrorInternalLogs
             }
             catch (Exception e)
             {
-                Logger.LogWarning($"Failed to initialize log mirroring: ({e.GetType()}) {e.Message}. No mirrored logs will be generated.");
+                Logger.LogWarning(
+                    $"Failed to initialize log mirroring: ({e.GetType()}) {e.Message}. No mirrored logs will be generated.");
                 Logger.LogDebug(e);
             }
         }
@@ -100,7 +101,8 @@ namespace MirrorInternalLogs
             Directory.CreateDirectory(dir);
             if (!TryCreateFile(path, out writer))
             {
-                Logger.LogWarning($"Couldn't create log file because the file is likely in use, skipping mirroring logs...");
+                Logger.LogWarning(
+                    "Couldn't create log file because the file is likely in use, skipping mirroring logs...");
                 return;
             }
 
@@ -114,18 +116,17 @@ namespace MirrorInternalLogs
             var ext = Path.GetExtension(path);
 
             for (var i = 0; i < max; i++)
-            {
                 try
                 {
                     var filePath = Path.Combine(dir, $"{filename}{(i > 0 ? $"_{i}" : "")}{ext}");
-                    sw = new StreamWriter(filePath, false, Encoding.UTF8) {AutoFlush = true};
+                    sw = new StreamWriter(filePath, false, Encoding.UTF8) { AutoFlush = true };
                     return true;
                 }
                 catch (Exception)
                 {
                     // skip
                 }
-            }
+
             sw = null;
             return false;
         }
