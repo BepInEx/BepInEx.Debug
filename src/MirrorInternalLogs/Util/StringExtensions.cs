@@ -13,11 +13,12 @@ namespace MirrorInternalLogs.Util
             return vars.Aggregate(fmt, (str, kv) => str.Replace($"{{{kv.Key}}}", kv.Value()));
         }
 
-        public static byte[] ParseHexBytes(this string str)
+        public static byte?[] ParseHexBytes(this string str, out string name)
         {
+            name = string.Empty;
             static bool IsHexChar(char lowerC) => '0' <= lowerC && lowerC <= '9' || 'a' <= lowerC && lowerC <= 'f';
-            var result = new List<byte>(); 
-            
+            var result = new List<byte?>();
+
             var sr = new StringReader(str);
             while (sr.Peek() > 0)
             {
@@ -25,9 +26,18 @@ namespace MirrorInternalLogs.Util
 
                 if (char.IsWhiteSpace(c))
                     continue;
-                if (c == ';')
+
+                if (c == '#')
+                {
+                    name = sr.ReadLine()?.Trim() ?? name;
+                }
+                else if (c == ';')
                 {
                     sr.ReadLine();
+                }
+                else if (c == '?')
+                {
+                    result.Add(null);
                 }
                 else if (IsHexChar(c) && sr.Peek() > 0)
                 {

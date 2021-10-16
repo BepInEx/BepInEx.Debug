@@ -20,7 +20,7 @@ namespace MirrorInternalLogs
         private static readonly ConfigFile Config =
             new ConfigFile(Path.Combine(Paths.ConfigPath, "MirrorInternalLogs.cfg"), true);
 
-        private static IPlatformPatcher patcher;
+        private static PatcherBase patcher;
         private static StreamWriter writer;
 
         internal static ConfigEntry<bool> LogToFile =
@@ -84,6 +84,7 @@ namespace MirrorInternalLogs
                 patcher = new X64Patcher();
             else
                 patcher = new X86Patcher();
+            Logger.LogDebug($"Using patcher: {patcher}");
 
             patcher.Patch(proc.BaseAddress, proc.ModuleMemorySize);
         }

@@ -75,12 +75,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="InternalUnityLogger.cs" />
-    <Compile Include="Platforms\IPlatformPatcher.cs" />
+    <Compile Include="Platforms\PatcherBase.cs" />
     <Compile Include="Platforms\X64Patcher.cs" />
     <Compile Include="Platforms\X86Patcher.cs" />
     <Compile Include="MirrorInternalLogsPatcher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\BytePattern.cs" />
+    <Compile Include="Util\InternalLogPatch.cs" />
     <Compile Include="Util\LibcHelper.cs" />
     <Compile Include="Util\StringExtensions.cs" />
   </ItemGroup>

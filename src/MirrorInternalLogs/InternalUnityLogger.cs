@@ -23,6 +23,21 @@ namespace MirrorInternalLogs
     public static class InternalUnityLogger
     {
         public static event EventHandler<UnityLogEventArgs> OnUnityInternalLog;
+        
+        internal static void OnLogHook(ulong type, IntPtr pattern, IntPtr args)
+        {
+            OnUnityLog((InternalLogLevel) type, pattern, args);
+        }
+        
+        internal static void OnLogHook(uint type, IntPtr pattern, IntPtr args)
+        {
+            OnUnityLog((InternalLogLevel) type, pattern, args);
+        }
+        
+        internal static void OnLogHook(IntPtr pattern, IntPtr args)
+        {
+            OnUnityLog(InternalLogLevel.Log, pattern, args);
+        }
 
         internal static void OnUnityLog(InternalLogLevel logLevel, IntPtr message, IntPtr parts)
         {

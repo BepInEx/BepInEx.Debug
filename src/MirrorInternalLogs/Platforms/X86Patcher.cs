@@ -1,87 +1,62 @@
 ﻿using System;
-using System.Linq;
 using System.Runtime.InteropServices;
 using MirrorInternalLogs.Util;
-using MonoMod.RuntimeDetour;
 
 namespace MirrorInternalLogs.Platforms
 {
-    internal class X86Patcher : IPlatformPatcher
+    internal class X86Patcher : PatcherBase
     {
-        private static PrintFDelegate original;
-
-        protected virtual BytePattern[] Patterns { get; } =
+        protected override IPatch[] Patterns { get; } =
         {
-            // New Unity
-            @"
+            new InternalLogPatch<PrintFDelegate>(
+                @"  # New Unity
                 55            ; push   ebp
                 8B EC         ; mov    ebp,esp
                 8D 45 0C      ; lea    eax,[ebp+0xc]
                 50            ; push   eax
                 FF 75 08      ; push   DWORD PTR [ebp+0x8]
-                6A 05         ; push   0x5
+                6A ?          ; push   
                 E8            ; call
-            ",
-            // Older Unity
-            @"
+                ", InternalUnityLogger.OnLogHook),
+            new InternalLogPatch<PrintFDelegate>(
+                @"  # Old Unity
                 55            ; push   ebp
                 8B EC         ; mov    ebp,esp
                 8B 4D 08      ; mov    ecx,DWORD PTR [ebp+0x8]
                 8D 45 0C      ; lea    eax,[ebp+0xc]
                 50            ; push   eax
                 51            ; push   ecx
-                6A 05         ; push   0x5
+                6A ?          ; push   ?
                 E8            ; call
-            "
+                ", InternalUnityLogger.OnLogHook),
+            new InternalLogPatch<PrintFDelegateNoType>(
+                @"  # Unity2019
+                55                                      ; push    ebp
+                8B EC                                   ; mov     ebp, esp
+                A1 ?  ?  ?  ?                           ; mov     eax, dword_112E6FE8
+                56                                      ; push    esi
+                8B 75 08                                ; mov     esi, [ebp+8]
+                85 C0                                   ; test    eax, eax
+                74 10                                   ; jz      short loc_10B06D10
+                8D 4D 0C                                ; lea     ecx, [ebp+0Ch]
+                51                                      ; push    ecx
+                56                                      ; push    esi
+                6A ?                                    ; push    ?
+                FF D0                                   ; call    eax
+                83 C4 0C                                ; add     esp, 0Ch
+                84 C0                                   ; test    al, al
+                74 0D                                   ; jz
+                8D 45 0C                                ; lea     eax, [ebp+0Ch]
+                50                                      ; push    eax
+                56                                      ; push    esi
+                E8                                      ; call
+                ", InternalUnityLogger.OnLogHook)
         };
-
-        public void Patch(IntPtr unityModule, int moduleSize)
-        {
-            var match = FindMatch(unityModule, moduleSize);
-            if (match == IntPtr.Zero)
-                return;
-
-            Apply(match);
-        }
-
-        protected virtual void Apply(IntPtr from)
-        {
-            var hookPtr =
-                Marshal.GetFunctionPointerForDelegate(new PrintFDelegate(OnLogHook));
-            var det = new NativeDetour(from, hookPtr, new NativeDetourConfig {ManualApply = true});
-            original = det.GenerateTrampoline<PrintFDelegate>();
-            det.Apply();
-        }
-
-        private static void OnLogHook(uint type, IntPtr pattern, IntPtr args)
-        {
-            InternalUnityLogger.OnUnityLog((InternalLogLevel) type, pattern, args);
-            original(type, pattern, args);
-        }
-
-        private unsafe IntPtr FindMatch(IntPtr start, int maxSize)
-        {
-            var match = Patterns.Select(p => new {p, res = p.Match(start, maxSize)})
-                .FirstOrDefault(m => m.res >= 0);
-            if (match == null)
-            {
-                MirrorInternalLogsPatcher.Logger.LogWarning(
-                    "No match found, cannot hook logging! Please report Unity version or game name to the developer!");
-                return IntPtr.Zero;
-            }
-
-            var ptr = (byte*) start.ToPointer();
-            MirrorInternalLogsPatcher.Logger.LogDebug($"Found at {match.res:X} ({start.ToInt64() + match.res:X})");
-            var offset = *(int*) (ptr + match.res + match.p.Length);
-            var jmpRva = unchecked((uint) (match.res + match.p.Length + sizeof(int)) + offset);
-            var addr = start.ToInt64() + jmpRva;
-            MirrorInternalLogsPatcher.Logger.LogDebug($"Parsed offset: {offset:X}");
-            MirrorInternalLogsPatcher.Logger.LogDebug(
-                $"Jump RVA: {jmpRva:X}, memory address: {addr:X} (image base: {start.ToInt64():X})");
-            return new IntPtr(addr);
-        }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void PrintFDelegate(uint type, IntPtr pattern, IntPtr parts);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void PrintFDelegateNoType(IntPtr pattern, IntPtr parts);
     }
 }

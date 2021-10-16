@@ -6,12 +6,15 @@ namespace MirrorInternalLogs.Util
 {
     internal class BytePattern
     {
-        private readonly byte[] pattern;
+        private readonly byte?[] pattern;
         private int[] jumpTable;
+        
+        public string Name { get; }
 
         public BytePattern(string bytes)
         {
-            pattern = bytes.ParseHexBytes();
+            pattern = bytes.ParseHexBytes(out var name);
+            Name = name;
             CreateJumpTable();
         }
 
@@ -45,7 +48,7 @@ namespace MirrorInternalLogs.Util
         {
             var ptr = (byte*) start.ToPointer();
             for (int j = 0, k = 0; j < maxSize;)
-                if (ptr[j] == pattern[k])
+                if (pattern[k] == null || ptr[j] == pattern[k])
                 {
                     j++;
                     k++;
