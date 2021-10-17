@@ -6,12 +6,22 @@ else {
     $dir = $PSScriptRoot + "\bin\"
 }
 
-$copy = $dir + "\copy\BepInEx\plugins" 
+# These DLLs are preloader patchers and should be put into a different folder
+$patchers = @("CtorShotgun.dll", "DemystifyExceptions.dll", "MirrorInternalLogs.dll", "StartupProfiler.dll")
+function GetCopyPath($pluginFile)
+{
+    if ($patchers.Contains($pluginFile)) {
+        return $dir + "\copy\BepInEx\patchers";
+    }
+    return $dir + "\copy\BepInEx\plugins";
+}
+
 $plugins = $dir + "\Release"
 
 # Create releases ---------
 function CreateZip ($pluginFile)
 {
+    $copy = GetCopyPath($pluginFile.Name)
     Remove-Item -Force -Path ($dir + "\copy") -Recurse -ErrorAction SilentlyContinue
     New-Item -ItemType Directory -Force -Path $copy
 
@@ -41,7 +51,7 @@ Remove-Item -Force -Path ($dir + "\copy") -Recurse
 # Create Starup profiler release
 $profilerdir = $dir + "\..\src\SimpleProfiler\bin"
 
-Get-ChildItem -Path ($profilerdir) | Where{$_.Name -Match "^MonoProfiler(32|64)\.(?!dll)"} | Remove-Item
+Get-ChildItem -Path ($profilerdir) | Where-Object{$_.Name -Match "^MonoProfiler(32|64)\.(?!dll)"} | Remove-Item
 
 $ver = (Get-ChildItem -Path $profilerdir -Filter "MonoProfilerController.dll" -Recurse -Force)[0].VersionInfo.FileVersion.ToString() -replace "^([\d+\.]+?\d+)[\.0]*$", '${1}'
 
