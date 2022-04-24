@@ -48,7 +48,8 @@ namespace ScriptEngine
             if (LoadOnStart.Value)
                 ReloadPlugins();
 
-            StartFileSystemWatcher();
+            if (EnableFileSystemWatcher.Value)
+                StartFileSystemWatcher();
         }
 
         void Update()
