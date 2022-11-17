@@ -42,8 +42,8 @@ namespace ScriptEngine
             LoadOnStart = Config.Bind("General", "LoadOnStart", false, new ConfigDescription("Load all plugins from the scripts folder when starting the application"));
             ReloadKey = Config.Bind("General", "ReloadKey", new KeyboardShortcut(KeyCode.F6), new ConfigDescription("Press this key to reload all the plugins from the scripts folder"));
             QuietMode = Config.Bind("General", "QuietMode", false, new ConfigDescription("Suppress sending log messages to console except for the error ones."));
-            EnableFileSystemWatcher = Config.Bind("General", "EnableFileSystemWatcher", false, new ConfigDescription("Listens for changes to the scripts directory and reloads all plugins automatically."));
-            IncludeSubdirectories = Config.Bind("General", "IncludeSubdirectories", false, new ConfigDescription("Include also subdirectories under the scripts folder."));
+            EnableFileSystemWatcher = Config.Bind("General", "EnableFileSystemWatcher", false, new ConfigDescription("Watches the scripts directory for file changes and reloads all plugins if any of them gets changed."));
+            IncludeSubdirectories = Config.Bind("General", "IncludeSubdirectories", false, new ConfigDescription("Also include subdirectories under the scripts folder."));
 
             if (LoadOnStart.Value)
                 ReloadPlugins();
