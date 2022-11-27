@@ -156,35 +156,19 @@ namespace ScriptEngine
             };
             fileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
             fileSystemWatcher.Filter = "*.dll";
-            fileSystemWatcher.Changed += (sender, args) =>
-            {
-                if (!QuietMode.Value)
-                    Logger.LogInfo($"File {Path.GetFileName(args.Name)} changed. Recompiling...");
-                shouldReload = true;
-                autoReloadTimer = AutoReloadDelay.Value;
-            };
-            fileSystemWatcher.Deleted += (sender, args) =>
-            {
-                if (!QuietMode.Value)
-                    Logger.LogInfo($"File {Path.GetFileName(args.Name)} removed. Recompiling...");
-                shouldReload = true;
-                autoReloadTimer = AutoReloadDelay.Value;
-            };
-            fileSystemWatcher.Created += (sender, args) =>
-            {
-                if (!QuietMode.Value)
-                    Logger.LogInfo($"File {Path.GetFileName(args.Name)} created. Recompiling...");
-                shouldReload = true;
-                autoReloadTimer = AutoReloadDelay.Value;
-            };
-            fileSystemWatcher.Renamed += (sender, args) =>
-            {
-                if (!QuietMode.Value)
-                    Logger.LogInfo($"File {Path.GetFileName(args.Name)} renamed. Recompiling...");
-                shouldReload = true;
-                autoReloadTimer = AutoReloadDelay.Value;
-            };
+            fileSystemWatcher.Changed += FileChangedEventHandler;
+            fileSystemWatcher.Deleted += FileChangedEventHandler;
+            fileSystemWatcher.Created += FileChangedEventHandler;
+            fileSystemWatcher.Renamed += FileChangedEventHandler;
             fileSystemWatcher.EnableRaisingEvents = true;
+        }
+        
+        private void FileChangedEventHandler(object sender, FileSystemEventArgs args)
+        {
+            if (!QuietMode.Value)
+                Logger.LogInfo($"File {Path.GetFileName(args.Name)} changed. Delayed recompiling...");
+            shouldReload = true;
+            autoReloadTimer = AutoReloadDelay.Value;
         }
         
         private IEnumerable<Type> GetTypesSafe(Assembly ass)
