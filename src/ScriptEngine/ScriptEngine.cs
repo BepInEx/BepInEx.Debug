@@ -27,15 +27,14 @@ namespace ScriptEngine
 
         ConfigEntry<bool> LoadOnStart { get; set; }
         ConfigEntry<KeyboardShortcut> ReloadKey { get; set; }
-        
-        // FS Watcher EDIT
         ConfigEntry<bool> QuietMode { get; set; }
         ConfigEntry<bool> EnableFileSystemWatcher { get; set; }
         ConfigEntry<bool> IncludeSubdirectories { get; set; }
+        ConfigEntry<float> AutoReloadDelay { get; set; }
         
         private FileSystemWatcher fileSystemWatcher;
         private bool shouldReload;
-        //
+        private float autoReloadTimer;
 
         void Awake()
         {
@@ -44,6 +43,7 @@ namespace ScriptEngine
             QuietMode = Config.Bind("General", "QuietMode", false, new ConfigDescription("Suppress sending log messages to console except for the error ones."));
             EnableFileSystemWatcher = Config.Bind("General", "EnableFileSystemWatcher", false, new ConfigDescription("Watches the scripts directory for file changes and reloads all plugins if any of them gets changed."));
             IncludeSubdirectories = Config.Bind("General", "IncludeSubdirectories", false, new ConfigDescription("Also include subdirectories under the scripts folder."));
+            AutoReloadDelay = Config.Bind("General", "AutoReloadDelay", 3.0f, new ConfigDescription("Time to wait, in seconds, from detecting a change to files in the scripts directory until all plugins start reloading."));
 
             if (LoadOnStart.Value)
                 ReloadPlugins();
@@ -54,8 +54,16 @@ namespace ScriptEngine
 
         void Update()
         {
-            if (shouldReload || ReloadKey.Value.IsDown())
+            if (ReloadKey.Value.IsDown())
+            {
                 ReloadPlugins();
+            }
+            else if (shouldReload)
+            {
+                autoReloadTimer -= Time.unscaledDeltaTime;
+                if (autoReloadTimer <= .0f)
+                    ReloadPlugins();
+            }
         }
 
         void ReloadPlugins()
@@ -153,24 +161,28 @@ namespace ScriptEngine
                 if (!QuietMode.Value)
                     Logger.LogInfo($"File {Path.GetFileName(args.Name)} changed. Recompiling...");
                 shouldReload = true;
+                autoReloadTimer = AutoReloadDelay.Value;
             };
             fileSystemWatcher.Deleted += (sender, args) =>
             {
                 if (!QuietMode.Value)
                     Logger.LogInfo($"File {Path.GetFileName(args.Name)} removed. Recompiling...");
                 shouldReload = true;
+                autoReloadTimer = AutoReloadDelay.Value;
             };
             fileSystemWatcher.Created += (sender, args) =>
             {
                 if (!QuietMode.Value)
                     Logger.LogInfo($"File {Path.GetFileName(args.Name)} created. Recompiling...");
                 shouldReload = true;
+                autoReloadTimer = AutoReloadDelay.Value;
             };
             fileSystemWatcher.Renamed += (sender, args) =>
             {
                 if (!QuietMode.Value)
                     Logger.LogInfo($"File {Path.GetFileName(args.Name)} renamed. Recompiling...");
                 shouldReload = true;
+                autoReloadTimer = AutoReloadDelay.Value;
             };
             fileSystemWatcher.EnableRaisingEvents = true;
         }
