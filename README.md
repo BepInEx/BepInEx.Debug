@@ -27,6 +27,8 @@ A simple profiler that can be used in any Unity player build as long as it can r
 
 **How to use:** To install simply extract the release archive into the game root directory (folder structure is important. MonoProfiler32/64.dll files need to be right next to the game .exe and other dlls need to be inside BepInEx subfolders). MonoProfiler32.dll and MonoProfiler64.dll can both be copied to the game directory and only the correct one will be loaded.
 
+**Warning:** If using a custom mono.dll (dnSpy debugging), the game might randomly hard crash while the profiler is running.
+
 Check the config file or use ConfigurationManager to change the hotkey used to dump the collected profiler data (KeyCode.BackQuote by default). Dumps only include information that was captured since the last time a dump was triggered.
 
 You can use LibreOffice Calc or Excel to view the dumped .csv results. Using Calc as example, open the .csv and import it with default options, then select columns A B and C, and click Data/AutoFilter. You can now click the arrows in 1st row to filter and sort the results.
