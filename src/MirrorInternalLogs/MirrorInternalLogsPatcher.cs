@@ -79,7 +79,7 @@ namespace MirrorInternalLogs
 
             var proc = Process.GetCurrentProcess().Modules
                 .Cast<ProcessModule>()
-                .FirstOrDefault(IsUnityPlayer) ?? Process.GetCurrentProcess().MainModule;
+                .FirstOrDefault(IsUnityPlayer) ?? Process.GetCurrentProcess().MainModule ?? throw new InvalidOperationException("Could not find Process.MainModule to patch");
 
             if (IntPtr.Size == 8)
                 patcher = new X64Patcher();
@@ -98,7 +98,7 @@ namespace MirrorInternalLogs
                 ["process"] = () => Paths.ProcessName
             }));
             var dir = Path.GetDirectoryName(path);
-            Directory.CreateDirectory(dir);
+            Directory.CreateDirectory(dir ?? throw new InvalidOperationException("Path.GetDirectoryName is null for path: " + path));
             if (!TryCreateFile(path, out writer))
             {
                 Logger.LogWarning(
@@ -111,7 +111,7 @@ namespace MirrorInternalLogs
 
         private static bool TryCreateFile(string path, out StreamWriter sw, int max = 50)
         {
-            var dir = Path.GetDirectoryName(path);
+            var dir = Path.GetDirectoryName(path) ?? throw new InvalidOperationException("Path.GetDirectoryName is null for path: " + path);
             var filename = Path.GetFileNameWithoutExtension(path);
             var ext = Path.GetExtension(path);
 

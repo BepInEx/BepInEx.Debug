@@ -7,7 +7,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Generic.Enumerable;
 using System.Diagnostics.Internal;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -25,7 +24,7 @@ namespace System.Diagnostics
         {
             if (exception == null) return new List<EnhancedStackFrame>();
 
-            var needFileInfo = true;
+            const bool needFileInfo = true;
             var stackTrace = new StackTrace(exception, needFileInfo);
 
             return GetFrames(stackTrace);
@@ -93,7 +92,7 @@ namespace System.Diagnostics
             // Method name
             methodDisplayInfo.MethodBase = method;
             methodDisplayInfo.Name = methodName;
-            if (method.Name.IndexOf("<") >= 0)
+            if (method.Name.IndexOf("<", StringComparison.Ordinal) >= 0)
             {
                 if (TryResolveGeneratedName(ref method, out type, out methodName, out subMethodName, out var kind,
                     out var ordinal))
@@ -126,7 +125,7 @@ namespace System.Diagnostics
                                 var value = field.GetValue(field);
                                 if (value is Delegate d)
                                     if (ReferenceEquals(d.Method, originMethod) &&
-                                        d.Target.ToString() == originMethod.DeclaringType.ToString())
+                                        d.Target.ToString() == originMethod.DeclaringType?.ToString())
                                     {
                                         methodDisplayInfo.Name = field.Name;
                                         methodDisplayInfo.IsLambda = false;
@@ -220,22 +219,25 @@ namespace System.Diagnostics
             switch (kind)
             {
                 case GeneratedNameKind.LocalFunction:
-                {
-                    var localNameStart = generatedName.IndexOf((char) kind, closeBracketOffset + 1);
-                    if (localNameStart < 0) break;
-                    localNameStart += 3;
-
-                    if (localNameStart < generatedName.Length)
                     {
-                        var localNameEnd = generatedName.IndexOf("|", localNameStart);
-                        if (localNameEnd > 0)
-                            subMethodName = generatedName.Substring(localNameStart, localNameEnd - localNameStart);
-                    }
+                        var localNameStart = generatedName.IndexOf((char)kind, closeBracketOffset + 1);
+                        if (localNameStart < 0) break;
+                        localNameStart += 3;
 
-                    break;
-                }
+                        if (localNameStart < generatedName.Length)
+                        {
+                            var localNameEnd = generatedName.IndexOf("|", localNameStart, StringComparison.Ordinal);
+                            if (localNameEnd > 0)
+                                subMethodName = generatedName.Substring(localNameStart, localNameEnd - localNameStart);
+                        }
+
+                        break;
+                    }
                 case GeneratedNameKind.LambdaMethod:
                     subMethodName = generatedName;
+                    break;
+
+                default:
                     break;
             }
 
@@ -338,10 +340,10 @@ namespace System.Diagnostics
 
         private static void GetOrdinal(MethodBase method, ref int? ordinal)
         {
-            var lamdaStart = method.Name.IndexOf((char) GeneratedNameKind.LambdaMethod + "__") + 3;
+            var lamdaStart = method.Name.IndexOf((char)GeneratedNameKind.LambdaMethod + "__", StringComparison.Ordinal) + 3;
             if (lamdaStart > 3)
             {
-                var secondStart = method.Name.IndexOf("_", lamdaStart) + 1;
+                var secondStart = method.Name.IndexOf("_", lamdaStart, StringComparison.Ordinal) + 1;
                 if (secondStart > 0) lamdaStart = secondStart;
 
                 if (!int.TryParse(method.Name.Substring(lamdaStart), out var foundOrdinal))
@@ -352,21 +354,22 @@ namespace System.Diagnostics
 
                 ordinal = foundOrdinal;
 
-                var methods = method.DeclaringType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic |
+                var methods = method.DeclaringType?.GetMethods(BindingFlags.Public | BindingFlags.NonPublic |
                                                               BindingFlags.Static | BindingFlags.Instance |
                                                               BindingFlags.DeclaredOnly);
 
-                var startName = method.Name.Substring(0, lamdaStart);
                 var count = 0;
-                foreach (var m in methods)
-                    if (m.Name.Length > lamdaStart && m.Name.StartsWith(startName))
-                    {
-                        count++;
+                if (methods != null)
+                {
+                    var startName = method.Name.Substring(0, lamdaStart);
+                    foreach (var m in methods)
+                        if (m.Name.Length > lamdaStart && m.Name.StartsWith(startName))
+                        {
+                            count++;
 
-                        if (count > 1) break;
-                    }
-
-
+                            if (count > 1) break;
+                        }
+                }
                 if (count <= 1) ordinal = null;
             }
         }
@@ -378,12 +381,15 @@ namespace System.Diagnostics
             switch (kind)
             {
                 case GeneratedNameKind.LocalFunction:
-                    var start = methodName.IndexOf("|");
+                    var start = methodName.IndexOf("|", StringComparison.Ordinal);
                     if (start < 1) return null;
-                    var end = methodName.IndexOf("_", start) + 1;
+                    var end = methodName.IndexOf("_", start, StringComparison.Ordinal) + 1;
                     if (end <= start) return null;
 
                     return methodName.Substring(start, end - start);
+
+                default:
+                    break;
             }
 
             return null;
@@ -413,7 +419,7 @@ namespace System.Diagnostics
                     int c = name[closeBracketOffset + 1];
                     if (c >= '1' && c <= '9' || c >= 'a' && c <= 'z') // Note '0' is not special.
                     {
-                        kind = (GeneratedNameKind) c;
+                        kind = (GeneratedNameKind)c;
                         return true;
                     }
                 }
@@ -619,6 +625,7 @@ namespace System.Diagnostics
             Debug.Assert(method.DeclaringType != null);
 
             declaringType = method.DeclaringType;
+            if (declaringType == null) return false;
 
             var parentType = declaringType.DeclaringType;
             if (parentType == null) return false;

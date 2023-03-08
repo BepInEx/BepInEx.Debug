@@ -4,6 +4,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Generic.Enumerable;
+using System.Linq;
 using System.Text;
 
 namespace System.Diagnostics
@@ -78,7 +79,7 @@ namespace System.Diagnostics
         /// </returns>
         public override StackFrame[] GetFrames()
         {
-            return _frames.ToArray();
+            return _frames.Cast<StackFrame>().ToArray();
         }
 
         /// <summary>

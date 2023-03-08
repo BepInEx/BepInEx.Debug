@@ -34,8 +34,13 @@ namespace MonoProfiler
             if (_key.Value.IsDown())
             {
                 var dumpFile = MonoProfilerPatcher.RunProfilerDump();
+
                 if (_uniqueNames.Value)
-                    dumpFile.MoveTo(Path.Combine(dumpFile.DirectoryName, $"{Path.GetFileNameWithoutExtension(dumpFile.Name)}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}{dumpFile.Extension}"));
+                {
+                    var containingDirectory = dumpFile.DirectoryName ?? throw new InvalidOperationException("dumpFile.DirectoryName is null for " + dumpFile);
+                    dumpFile.MoveTo(Path.Combine(containingDirectory, $"{Path.GetFileNameWithoutExtension(dumpFile.Name)}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}{dumpFile.Extension}"));
+                }
+
                 Logger.LogMessage("Saved profiler dump to " + dumpFile.FullName);
             }
         }

@@ -24,20 +24,20 @@ namespace ScriptEngine
 
         public string ScriptDirectory => Path.Combine(Paths.BepInExRootPath, "scripts");
 
-        GameObject scriptManager;
+        private GameObject scriptManager;
 
-        ConfigEntry<bool> LoadOnStart { get; set; }
-        ConfigEntry<KeyboardShortcut> ReloadKey { get; set; }
-        ConfigEntry<bool> QuietMode { get; set; }
-        ConfigEntry<bool> EnableFileSystemWatcher { get; set; }
-        ConfigEntry<bool> IncludeSubdirectories { get; set; }
-        ConfigEntry<float> AutoReloadDelay { get; set; }
+        private ConfigEntry<bool> LoadOnStart { get; set; }
+        private ConfigEntry<KeyboardShortcut> ReloadKey { get; set; }
+        private ConfigEntry<bool> QuietMode { get; set; }
+        private ConfigEntry<bool> EnableFileSystemWatcher { get; set; }
+        private ConfigEntry<bool> IncludeSubdirectories { get; set; }
+        private ConfigEntry<float> AutoReloadDelay { get; set; }
 
         private FileSystemWatcher fileSystemWatcher;
         private bool shouldReload;
         private float autoReloadTimer;
 
-        void Awake()
+        private void Awake()
         {
             LoadOnStart = Config.Bind("General", "LoadOnStart", false, new ConfigDescription("Load all plugins from the scripts folder when starting the application. This is done from inside of Chainloader's Awake, therefore not all plugis might be loaded yet. BepInDependency attributes are ignored."));
             ReloadKey = Config.Bind("General", "ReloadKey", new KeyboardShortcut(KeyCode.F6), new ConfigDescription("Press this key to reload all the plugins from the scripts folder"));
@@ -53,7 +53,7 @@ namespace ScriptEngine
                 StartFileSystemWatcher();
         }
 
-        void Update()
+        private void Update()
         {
             if (ReloadKey.Value.IsDown())
             {
@@ -67,7 +67,7 @@ namespace ScriptEngine
             }
         }
 
-        void ReloadPlugins()
+        private void ReloadPlugins()
         {
             shouldReload = false;
 
@@ -104,7 +104,7 @@ namespace ScriptEngine
             }
         }
 
-        void LoadDLL(string path, GameObject obj)
+        private void LoadDLL(string path, GameObject obj)
         {
             var defaultResolver = new DefaultAssemblyResolver();
             defaultResolver.AddSearchDirectory(ScriptDirectory);
@@ -215,7 +215,7 @@ namespace ScriptEngine
             }
         }
 
-        IEnumerator DelayAction(Action action)
+        private IEnumerator DelayAction(Action action)
         {
             yield return null;
             action();

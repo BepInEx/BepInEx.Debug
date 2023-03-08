@@ -24,7 +24,7 @@ namespace MirrorInternalLogs.Util
             Pattern = pattern;
 
             var delegateType = typeof(T);
-            var invoke = delegateType.GetMethod("Invoke");
+            var invoke = delegateType.GetMethod("Invoke") ?? throw new InvalidOperationException("delegateType.GetMethod(\"Invoke\") returned null for " + delegateType);
             var callParams = invoke.GetParameters();
 
             var dmd = new DynamicMethodDefinition($"{typeof(InternalLogPatch<T>).FullName}_Detour", invoke.ReturnType,
