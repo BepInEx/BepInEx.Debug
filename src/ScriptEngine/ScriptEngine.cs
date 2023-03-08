@@ -27,40 +27,67 @@ namespace ScriptEngine
 
         ConfigEntry<bool> LoadOnStart { get; set; }
         ConfigEntry<KeyboardShortcut> ReloadKey { get; set; }
+        ConfigEntry<bool> QuietMode { get; set; }
+        ConfigEntry<bool> EnableFileSystemWatcher { get; set; }
+        ConfigEntry<bool> IncludeSubdirectories { get; set; }
+        ConfigEntry<float> AutoReloadDelay { get; set; }
+        
+        private FileSystemWatcher fileSystemWatcher;
+        private bool shouldReload;
+        private float autoReloadTimer;
 
         void Awake()
         {
             LoadOnStart = Config.Bind("General", "LoadOnStart", false, new ConfigDescription("Load all plugins from the scripts folder when starting the application"));
             ReloadKey = Config.Bind("General", "ReloadKey", new KeyboardShortcut(KeyCode.F6), new ConfigDescription("Press this key to reload all the plugins from the scripts folder"));
+            QuietMode = Config.Bind("General", "QuietMode", false, new ConfigDescription("Suppress sending log messages to console except for the error ones."));
+            EnableFileSystemWatcher = Config.Bind("General", "EnableFileSystemWatcher", false, new ConfigDescription("Watches the scripts directory for file changes and reloads all plugins if any of them gets changed."));
+            IncludeSubdirectories = Config.Bind("General", "IncludeSubdirectories", false, new ConfigDescription("Also include subdirectories under the scripts folder."));
+            AutoReloadDelay = Config.Bind("General", "AutoReloadDelay", 3.0f, new ConfigDescription("Time to wait, in seconds, from detecting a change to files in the scripts directory until all plugins start reloading."));
 
             if (LoadOnStart.Value)
                 ReloadPlugins();
+
+            if (EnableFileSystemWatcher.Value)
+                StartFileSystemWatcher();
         }
 
         void Update()
         {
             if (ReloadKey.Value.IsDown())
+            {
                 ReloadPlugins();
+            }
+            else if (shouldReload)
+            {
+                autoReloadTimer -= Time.unscaledDeltaTime;
+                if (autoReloadTimer <= .0f)
+                    ReloadPlugins();
+            }
         }
 
         void ReloadPlugins()
         {
-            Logger.Log(LogLevel.Info, "Unloading old plugin instances");
+            shouldReload = false;
+            if (!QuietMode.Value)
+                Logger.Log(LogLevel.Info, "Unloading old plugin instances");
             Destroy(scriptManager);
             scriptManager = new GameObject($"ScriptEngine_{DateTime.Now.Ticks}");
             DontDestroyOnLoad(scriptManager);
 
-            var files = Directory.GetFiles(ScriptDirectory, "*.dll");
+            var files = Directory.GetFiles(ScriptDirectory, "*.dll", IncludeSubdirectories.Value ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
             if (files.Length > 0)
             {
-                foreach (string path in Directory.GetFiles(ScriptDirectory, "*.dll"))
+                foreach (string path in Directory.GetFiles(ScriptDirectory, "*.dll", IncludeSubdirectories.Value ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly))
                     LoadDLL(path, scriptManager);
 
-                Logger.LogMessage("Reloaded all plugins!");
+                if (!QuietMode.Value)
+                    Logger.LogMessage("Reloaded all plugins!");
             }
             else
             {
-                Logger.LogMessage("No plugins to reload");
+                if (!QuietMode.Value)
+                    Logger.LogMessage("No plugins to reload");
             }
         }
 
@@ -71,7 +98,8 @@ namespace ScriptEngine
             defaultResolver.AddSearchDirectory(Paths.ManagedPath);
             defaultResolver.AddSearchDirectory(Paths.BepInExAssemblyDirectory);
 
-            Logger.Log(LogLevel.Info, $"Loading plugins from {path}");
+            if (!QuietMode.Value)
+                Logger.Log(LogLevel.Info, $"Loading plugins from {path}");
 
             using (var dll = AssemblyDefinition.ReadAssembly(path, new ReaderParameters { AssemblyResolver = defaultResolver }))
             {
@@ -95,7 +123,8 @@ namespace ScriptEngine
                                     var typeInfo = Chainloader.ToPluginInfo(typeDefinition);
                                     Chainloader.PluginInfos[metadata.GUID] = typeInfo;
 
-                                    Logger.Log(LogLevel.Info, $"Loading {metadata.GUID}");
+                                    if (!QuietMode.Value)
+                                        Logger.Log(LogLevel.Info, $"Loading {metadata.GUID}");
                                     StartCoroutine(DelayAction(() =>
                                     {
                                         try
@@ -119,6 +148,29 @@ namespace ScriptEngine
             }
         }
 
+        private void StartFileSystemWatcher()
+        {
+            fileSystemWatcher = new FileSystemWatcher(ScriptDirectory)
+            {
+                IncludeSubdirectories = IncludeSubdirectories.Value
+            };
+            fileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
+            fileSystemWatcher.Filter = "*.dll";
+            fileSystemWatcher.Changed += FileChangedEventHandler;
+            fileSystemWatcher.Deleted += FileChangedEventHandler;
+            fileSystemWatcher.Created += FileChangedEventHandler;
+            fileSystemWatcher.Renamed += FileChangedEventHandler;
+            fileSystemWatcher.EnableRaisingEvents = true;
+        }
+        
+        private void FileChangedEventHandler(object sender, FileSystemEventArgs args)
+        {
+            if (!QuietMode.Value)
+                Logger.LogInfo($"File {Path.GetFileName(args.Name)} changed. Delayed recompiling...");
+            shouldReload = true;
+            autoReloadTimer = AutoReloadDelay.Value;
+        }
+        
         private IEnumerable<Type> GetTypesSafe(Assembly ass)
         {
             try
