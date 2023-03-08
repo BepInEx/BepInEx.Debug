@@ -31,7 +31,7 @@ namespace ScriptEngine
         ConfigEntry<bool> EnableFileSystemWatcher { get; set; }
         ConfigEntry<bool> IncludeSubdirectories { get; set; }
         ConfigEntry<float> AutoReloadDelay { get; set; }
-        
+
         private FileSystemWatcher fileSystemWatcher;
         private bool shouldReload;
         private float autoReloadTimer;
@@ -69,9 +69,21 @@ namespace ScriptEngine
         void ReloadPlugins()
         {
             shouldReload = false;
-            if (!QuietMode.Value)
-                Logger.Log(LogLevel.Info, "Unloading old plugin instances");
-            Destroy(scriptManager);
+
+            if (scriptManager != null)
+            {
+                if (!QuietMode.Value) Logger.Log(LogLevel.Info, "Unloading old plugin instances");
+
+                foreach (var previouslyLoadedPlugin in scriptManager.GetComponents<BaseUnityPlugin>())
+                {
+                    var metadataGUID = previouslyLoadedPlugin.Info.Metadata.GUID;
+                    if (Chainloader.PluginInfos.ContainsKey(metadataGUID))
+                        Chainloader.PluginInfos.Remove(metadataGUID);
+                }
+
+                Destroy(scriptManager);
+            }
+
             scriptManager = new GameObject($"ScriptEngine_{DateTime.Now.Ticks}");
             DontDestroyOnLoad(scriptManager);
 
@@ -162,7 +174,7 @@ namespace ScriptEngine
             fileSystemWatcher.Renamed += FileChangedEventHandler;
             fileSystemWatcher.EnableRaisingEvents = true;
         }
-        
+
         private void FileChangedEventHandler(object sender, FileSystemEventArgs args)
         {
             if (!QuietMode.Value)
@@ -170,7 +182,7 @@ namespace ScriptEngine
             shouldReload = true;
             autoReloadTimer = AutoReloadDelay.Value;
         }
-        
+
         private IEnumerable<Type> GetTypesSafe(Assembly ass)
         {
             try
