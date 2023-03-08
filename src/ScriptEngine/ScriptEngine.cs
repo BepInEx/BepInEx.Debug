@@ -39,12 +39,12 @@ namespace ScriptEngine
 
         void Awake()
         {
-            LoadOnStart = Config.Bind("General", "LoadOnStart", false, new ConfigDescription("Load all plugins from the scripts folder when starting the application"));
+            LoadOnStart = Config.Bind("General", "LoadOnStart", false, new ConfigDescription("Load all plugins from the scripts folder when starting the application. This is done from inside of Chainloader's Awake, therefore not all plugis might be loaded yet. BepInDependency attributes are ignored."));
             ReloadKey = Config.Bind("General", "ReloadKey", new KeyboardShortcut(KeyCode.F6), new ConfigDescription("Press this key to reload all the plugins from the scripts folder"));
-            QuietMode = Config.Bind("General", "QuietMode", false, new ConfigDescription("Suppress sending log messages to console except for the error ones."));
-            EnableFileSystemWatcher = Config.Bind("General", "EnableFileSystemWatcher", false, new ConfigDescription("Watches the scripts directory for file changes and reloads all plugins if any of them gets changed."));
-            IncludeSubdirectories = Config.Bind("General", "IncludeSubdirectories", false, new ConfigDescription("Also include subdirectories under the scripts folder."));
-            AutoReloadDelay = Config.Bind("General", "AutoReloadDelay", 3.0f, new ConfigDescription("Time to wait, in seconds, from detecting a change to files in the scripts directory until all plugins start reloading."));
+            QuietMode = Config.Bind("General", "QuietMode", false, new ConfigDescription("Disable all logging except for error messages."));
+            IncludeSubdirectories = Config.Bind("General", "IncludeSubdirectories", false, new ConfigDescription("Also load plugins from subdirectories of the scripts folder."));
+            EnableFileSystemWatcher = Config.Bind("AutoReload", "EnableFileSystemWatcher", false, new ConfigDescription("Watches the scripts directory for file changes and automatically reloads all plugins if any of the files gets changed (added/removed/modified)."));
+            AutoReloadDelay = Config.Bind("AutoReload", "AutoReloadDelay", 3.0f, new ConfigDescription("Delay in seconds from detecting a change to files in the scripts directory to plugins being reloaded. Affects only EnableFileSystemWatcher."));
 
             if (LoadOnStart.Value)
                 ReloadPlugins();
