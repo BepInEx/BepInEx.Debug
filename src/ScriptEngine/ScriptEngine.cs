@@ -131,6 +131,9 @@ namespace ScriptEngine
                                 var metadata = MetadataHelper.GetMetadata(type);
                                 if (metadata != null)
                                 {
+                                    if (Chainloader.PluginInfos.TryGetValue(metadata.GUID, out var existingPluginInfo))
+                                        throw new InvalidOperationException($"A plugin with GUID {metadata.GUID} is already loaded! ({existingPluginInfo.Metadata.Name} v{existingPluginInfo.Metadata.Version})");
+
                                     var typeDefinition = dll.MainModule.Types.First(x => x.FullName == type.FullName);
                                     var typeInfo = Chainloader.ToPluginInfo(typeDefinition);
                                     Chainloader.PluginInfos[metadata.GUID] = typeInfo;
