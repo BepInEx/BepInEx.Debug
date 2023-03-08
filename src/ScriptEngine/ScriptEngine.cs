@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Common;
+using HarmonyLib;
 using UnityEngine;
 
 namespace ScriptEngine
@@ -126,33 +127,42 @@ namespace ScriptEngine
                     {
                         try
                         {
-                            if (typeof(BaseUnityPlugin).IsAssignableFrom(type))
+                            if (!typeof(BaseUnityPlugin).IsAssignableFrom(type)) continue;
+
+                            var metadata = MetadataHelper.GetMetadata(type);
+                            if (metadata == null) continue;
+
+                            if (!QuietMode.Value)
+                                Logger.Log(LogLevel.Info, $"Loading {metadata.GUID}");
+
+                            if (Chainloader.PluginInfos.TryGetValue(metadata.GUID, out var existingPluginInfo))
+                                throw new InvalidOperationException($"A plugin with GUID {metadata.GUID} is already loaded! ({existingPluginInfo.Metadata.Name} v{existingPluginInfo.Metadata.Version})");
+
+                            var typeDefinition = dll.MainModule.Types.First(x => x.FullName == type.FullName);
+                            var pluginInfo = Chainloader.ToPluginInfo(typeDefinition);
+
+                            StartCoroutine(DelayAction(() =>
                             {
-                                var metadata = MetadataHelper.GetMetadata(type);
-                                if (metadata != null)
+                                try
                                 {
-                                    if (Chainloader.PluginInfos.TryGetValue(metadata.GUID, out var existingPluginInfo))
-                                        throw new InvalidOperationException($"A plugin with GUID {metadata.GUID} is already loaded! ({existingPluginInfo.Metadata.Name} v{existingPluginInfo.Metadata.Version})");
+                                    // Need to add to PluginInfos first because BaseUnityPlugin constructor (called by AddComponent below)
+                                    // looks in PluginInfos for an existing PluginInfo and uses it instead of creating a new one.
+                                    Chainloader.PluginInfos[metadata.GUID] = pluginInfo;
 
-                                    var typeDefinition = dll.MainModule.Types.First(x => x.FullName == type.FullName);
-                                    var typeInfo = Chainloader.ToPluginInfo(typeDefinition);
-                                    Chainloader.PluginInfos[metadata.GUID] = typeInfo;
+                                    var instance = obj.AddComponent(type);
 
-                                    if (!QuietMode.Value)
-                                        Logger.Log(LogLevel.Info, $"Loading {metadata.GUID}");
-                                    StartCoroutine(DelayAction(() =>
-                                    {
-                                        try
-                                        {
-                                            obj.AddComponent(type);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Logger.LogError($"Failed to load plugin {metadata.GUID} because of exception: {e}");
-                                        }
-                                    }));
+                                    // Fill in properties that are normally set by Chainloader
+                                    var tv = Traverse.Create(pluginInfo);
+                                    tv.Property<BaseUnityPlugin>(nameof(pluginInfo.Instance)).Value = (BaseUnityPlugin)instance;
+                                    // Loading the assembly from memory causes Location to be lost
+                                    tv.Property<string>(nameof(pluginInfo.Location)).Value = path;
                                 }
-                            }
+                                catch (Exception e)
+                                {
+                                    Logger.LogError($"Failed to load plugin {metadata.GUID} because of exception: {e}");
+                                    Chainloader.PluginInfos.Remove(metadata.GUID);
+                                }
+                            }));
                         }
                         catch (Exception e)
                         {
