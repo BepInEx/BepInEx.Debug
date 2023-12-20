@@ -88,3 +88,6 @@ https://github.com/risk-of-thunder/R2Wiki/wiki/Debugging-Your-Mods-With-dnSpy
 ### Runtime Unity Editor
 In-game inspector, editor and interactive console for applications made with Unity3D game engine. It's designed for debugging and modding Unity games.  
 https://github.com/ManlyMarco/RuntimeUnityEditor#readme
+
+## Troubleshooting
+- The BepInEx plugin manager object is destroyed early in certain games which aggressively clean up scenes, causing some plugins to not work. This can be fixed by setting the `HideManagerGameObject` option to `true` in `BepInEx/config/BepInEx.cfg`.
