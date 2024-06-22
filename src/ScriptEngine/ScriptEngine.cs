@@ -13,6 +13,9 @@ using System.Text;
 using Common;
 using HarmonyLib;
 using UnityEngine;
+using System.Security.Cryptography;
+using UnityEngine.Networking.Types;
+using System.Diagnostics;
 
 namespace ScriptEngine
 {
@@ -33,6 +36,9 @@ namespace ScriptEngine
         private ConfigEntry<bool> IncludeSubdirectories { get; set; }
         private ConfigEntry<float> AutoReloadDelay { get; set; }
 
+        private ConfigEntry<bool> DumpAssemblies { get; set; }
+        private static readonly string DumpedAssembliesPath = Utility.CombinePaths(Paths.BepInExRootPath, "ScriptEngineDumpedAssemblies");
+
         private FileSystemWatcher fileSystemWatcher;
         private bool shouldReload;
         private float autoReloadTimer;
@@ -45,6 +51,10 @@ namespace ScriptEngine
             IncludeSubdirectories = Config.Bind("General", "IncludeSubdirectories", false, new ConfigDescription("Also load plugins from subdirectories of the scripts folder."));
             EnableFileSystemWatcher = Config.Bind("AutoReload", "EnableFileSystemWatcher", false, new ConfigDescription("Watches the scripts directory for file changes and automatically reloads all plugins if any of the files gets changed (added/removed/modified)."));
             AutoReloadDelay = Config.Bind("AutoReload", "AutoReloadDelay", 3.0f, new ConfigDescription("Delay in seconds from detecting a change to files in the scripts directory to plugins being reloaded. Affects only EnableFileSystemWatcher."));
+            DumpAssemblies = Config.Bind<bool>("AutoReload", "DumpAssemblies", false, "If enabled, BepInEx will save patched assemblies & symbols into BepInEx/ScriptEngineDumpedAssemblies.\nThis can be used by developers to inspect and debug plugins loaded by ScriptEngine.");
+
+            if (Directory.Exists(DumpedAssembliesPath))
+                Directory.Delete(DumpedAssembliesPath, true);
 
             if (LoadOnStart.Value)
                 ReloadPlugins();
@@ -114,60 +124,88 @@ namespace ScriptEngine
             if (!QuietMode.Value)
                 Logger.Log(LogLevel.Info, $"Loading plugins from {path}");
 
-            using (var dll = AssemblyDefinition.ReadAssembly(path, new ReaderParameters { AssemblyResolver = defaultResolver }))
+            using (var dll = AssemblyDefinition.ReadAssembly(path, new ReaderParameters {
+                AssemblyResolver = defaultResolver,
+                ReadSymbols = true
+            }))
             {
                 dll.Name.Name = $"{dll.Name.Name}-{DateTime.Now.Ticks}";
+                Assembly ass;
 
-                using (var ms = new MemoryStream())
+                if (DumpAssemblies.Value)
                 {
-                    dll.Write(ms);
-                    var ass = Assembly.Load(ms.ToArray());
+                    // Dump assembly & load it from disk
+                    if (!Directory.Exists(DumpedAssembliesPath))
+                        Directory.CreateDirectory(DumpedAssembliesPath);
+   
+                    string assemblyDumpPath = Path.Combine(DumpedAssembliesPath, dll.Name.Name + Path.GetExtension(dll.MainModule.Name));
 
-                    foreach (Type type in GetTypesSafe(ass))
+                    using (FileStream outFileStream = new FileStream(assemblyDumpPath, FileMode.Create))
                     {
-                        try
+                        dll.Write((Stream)outFileStream, new WriterParameters()
                         {
-                            if (!typeof(BaseUnityPlugin).IsAssignableFrom(type)) continue;
+                            WriteSymbols = true
+                        });
+                    }
+                    Logger.Log(LogLevel.Info, $"Dumped Assembly & Symbols to {assemblyDumpPath}");
 
-                            var metadata = MetadataHelper.GetMetadata(type);
-                            if (metadata == null) continue;
+                    ass = Assembly.LoadFile(assemblyDumpPath);
+                    Logger.Log(LogLevel.Info, $"Loaded dumped Assembly from {assemblyDumpPath}");
+                } else
+                {
+                    // Load from memory
+                    using (var ms = new MemoryStream())
+                    {
+                        dll.Write(ms);
+                        ass = Assembly.Load(ms.ToArray());
+                    }
+                }
 
-                            if (!QuietMode.Value)
-                                Logger.Log(LogLevel.Info, $"Loading {metadata.GUID}");
 
-                            if (Chainloader.PluginInfos.TryGetValue(metadata.GUID, out var existingPluginInfo))
-                                throw new InvalidOperationException($"A plugin with GUID {metadata.GUID} is already loaded! ({existingPluginInfo.Metadata.Name} v{existingPluginInfo.Metadata.Version})");
+                foreach (Type type in GetTypesSafe(ass))
+                {
+                    try
+                    {
+                        if (!typeof(BaseUnityPlugin).IsAssignableFrom(type)) continue;
 
-                            var typeDefinition = dll.MainModule.Types.First(x => x.FullName == type.FullName);
-                            var pluginInfo = Chainloader.ToPluginInfo(typeDefinition);
+                        var metadata = MetadataHelper.GetMetadata(type);
+                        if (metadata == null) continue;
 
-                            StartCoroutine(DelayAction(() =>
+                        if (!QuietMode.Value)
+                            Logger.Log(LogLevel.Info, $"Loading {metadata.GUID}");
+
+                        if (Chainloader.PluginInfos.TryGetValue(metadata.GUID, out var existingPluginInfo))
+                            throw new InvalidOperationException($"A plugin with GUID {metadata.GUID} is already loaded! ({existingPluginInfo.Metadata.Name} v{existingPluginInfo.Metadata.Version})");
+
+                        var typeDefinition = dll.MainModule.Types.First(x => x.FullName == type.FullName);
+                        var pluginInfo = Chainloader.ToPluginInfo(typeDefinition);
+
+                        StartCoroutine(DelayAction(() =>
+                        {
+                            try
                             {
-                                try
-                                {
-                                    // Need to add to PluginInfos first because BaseUnityPlugin constructor (called by AddComponent below)
-                                    // looks in PluginInfos for an existing PluginInfo and uses it instead of creating a new one.
-                                    Chainloader.PluginInfos[metadata.GUID] = pluginInfo;
+                                // Need to add to PluginInfos first because BaseUnityPlugin constructor (called by AddComponent below)
+                                // looks in PluginInfos for an existing PluginInfo and uses it instead of creating a new one.
+                                Chainloader.PluginInfos[metadata.GUID] = pluginInfo;
 
-                                    var instance = obj.AddComponent(type);
+                                var instance = obj.AddComponent(type);
 
-                                    // Fill in properties that are normally set by Chainloader
-                                    var tv = Traverse.Create(pluginInfo);
-                                    tv.Property<BaseUnityPlugin>(nameof(pluginInfo.Instance)).Value = (BaseUnityPlugin)instance;
-                                    // Loading the assembly from memory causes Location to be lost
-                                    tv.Property<string>(nameof(pluginInfo.Location)).Value = path;
-                                }
-                                catch (Exception e)
-                                {
-                                    Logger.LogError($"Failed to load plugin {metadata.GUID} because of exception: {e}");
-                                    Chainloader.PluginInfos.Remove(metadata.GUID);
-                                }
-                            }));
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.LogError($"Failed to load plugin {type.Name} because of exception: {e}");
-                        }
+                                // Fill in properties that are normally set by Chainloader
+                                var tv = Traverse.Create(pluginInfo);
+                                tv.Property<BaseUnityPlugin>(nameof(pluginInfo.Instance)).Value = (BaseUnityPlugin)instance;
+                                // Loading the assembly from memory causes Location to be lost
+                                tv.Property<string>(nameof(pluginInfo.Location)).Value = path;
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.LogError($"Failed to load plugin {metadata.GUID} because of exception: {e}");
+                                Chainloader.PluginInfos.Remove(metadata.GUID);
+                            }
+                        }));
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogError($"Failed to load plugin {type.Name} because of exception: {e}");
                     }
                 }
             }
