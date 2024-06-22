@@ -13,9 +13,6 @@ using System.Text;
 using Common;
 using HarmonyLib;
 using UnityEngine;
-using System.Security.Cryptography;
-using UnityEngine.Networking.Types;
-using System.Diagnostics;
 
 namespace ScriptEngine
 {
