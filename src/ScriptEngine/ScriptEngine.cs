@@ -144,10 +144,10 @@ namespace ScriptEngine
                             WriteSymbols = true
                         });
                     }
-                    Logger.Log(LogLevel.Info, $"Dumped Assembly & Symbols to {assemblyDumpPath}");
 
                     ass = Assembly.LoadFile(assemblyDumpPath);
-                    Logger.Log(LogLevel.Info, $"Loaded dumped Assembly from {assemblyDumpPath}");
+                    if (!QuietMode.Value)
+                        Logger.Log(LogLevel.Info, $"Loaded dumped Assembly from {assemblyDumpPath}");
                 } else
                 {
                     // Load from memory
