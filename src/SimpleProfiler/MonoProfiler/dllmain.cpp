@@ -15,6 +15,7 @@ struct MethodStats
 	uint64_t call_count = 0;
 	uint64_t total_allocation = 0;
 	nanoseconds total_runtime = nanoseconds(0);
+	nanoseconds self_runtime = nanoseconds(0);
 };
 
 struct StackEntry
@@ -22,6 +23,7 @@ struct StackEntry
 	void* method;
 	time_point<high_resolution_clock> entry_time;
 	uint64_t entry_alloc;
+	nanoseconds child_runtime;
 };
 
 // Per-thread profiler info.
@@ -55,7 +57,17 @@ struct ThreadProfilerInfo
 
 	void enter_method(void* method)
 	{
-		stack.push_back(StackEntry{ method, high_resolution_clock::now(), mono_gc_get_used_size() });
+		stack.push_back(StackEntry{ method, high_resolution_clock::now(), mono_gc_get_used_size(), nanoseconds(0) });
+	}
+
+	MethodStats* get_method_stats(void* method)
+	{
+		table_t::iterator it = table.find(method);
+
+		if (it == table.end())
+			it = table.insert({ method, {} }).first;
+
+		return &it->second;
 	}
 
 	void leave_method(void* method)
@@ -71,21 +83,26 @@ struct ThreadProfilerInfo
 			return;
 
 		std::lock_guard guard(stats_mut);
-		table_t::iterator it = table.find(method);
-		if (it == table.end())
-		{
-			it = table.insert({ method, {} }).first;
-		}
 
-		it->second.total_runtime += now - top.entry_time;
-		it->second.call_count++;
+		auto stats = get_method_stats(method);
+
+		auto time = now - top.entry_time;
+		stats->total_runtime += time;
+		stats->self_runtime += time - top.child_runtime;
+		stats->call_count++;
 		uint64_t used_size = mono_gc_get_used_size();
 		// If a GC has happened since the method was entered, our allocation
 		// estimate will be messed up. Here we use a simple heuristic:
 		// ignore any negative allocation number.
 		if (used_size > top.entry_alloc)
 		{
-			it->second.total_allocation += used_size - top.entry_alloc;
+			stats->total_allocation += used_size - top.entry_alloc;
+		}
+
+		if (!stack.empty())
+		{
+			StackEntry& parent = stack.back();
+			parent.child_runtime += time;
 		}
 	}
 
@@ -103,6 +120,7 @@ struct ThreadProfilerInfo
 		const char* name;
 		uint64_t count;
 		int64_t total_runtime;
+		int64_t self_runtime;
 		uint64_t total_allocation;
 	};
 
@@ -121,6 +139,7 @@ struct ThreadProfilerInfo
 						.name = mono_method_full_name(entry.first),
 						.count = entry.second.call_count,
 						.total_runtime = entry.second.total_runtime.count(),
+						.self_runtime = entry.second.self_runtime.count(),
 						.total_allocation = entry.second.total_allocation });
 				}
 			}
@@ -136,13 +155,13 @@ struct ThreadProfilerInfo
 			return a.total_runtime > b.total_runtime;
 		});
 
-		fs << "\"Thread\",\"Call count\",\"Method name\",\"Total runtime (ns)\",\"Total allocation (bytes)\"" << std::endl;
+		fs << "\"Thread\",\"Call count\",\"Method name\",\"Total runtime (ns)\",\"Self runtime (ns)\",\"Total allocation (bytes)\"" << std::endl;
 
 		//Dump into csv
 		for (auto& it : rows)
 		{
 			fs << it.thread_id << "," << it.count << ",\"" << it.name << "\"," <<
-				it.total_runtime << "," << it.total_allocation << std::endl;
+				it.total_runtime << "," << it.self_runtime << "," << it.total_allocation << std::endl;
 		}
 
 		fs.close();
