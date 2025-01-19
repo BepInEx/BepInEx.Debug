@@ -59,6 +59,8 @@ private void OnDestroy()
 }
 ```
 
+If you want to debug plugins loaded by ScriptEngine you'll have to find the loaded assembly after every reload, since by necessity a new, renamed copy of the plugin assembly is loaded on every reload. You either have to find the loaded plugin in the modules view of your debugger (it will be named something like `data-xxxxxxxxxxxxxxx`, sorting by timestamp can help find it or you can use `Debugger.Break()` in your plugin's init), or you can turn on the `DumpAssemblies` setting and use the dropped dll files to debug (check the setting description for more info).
+
 **How to use:** This is a plugin. Put the compiled DLL into `BepInEx/plugins`.
 
 ### Startup Profiler
