@@ -8,11 +8,11 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v4
     - name: Setup Nuget.exe
       uses: NuGet/setup-nuget@v1.0.5
     - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v1
+      uses: microsoft/setup-msbuild@v2
     - name: Restore
       working-directory: .
       run: nuget restore
@@ -20,7 +20,7 @@ jobs:
       working-directory: .
       run: msbuild /t:Build /p:Configuration=Release BepInEx.Debug.sln
     - name: Upload artifact
-      uses: actions/upload-artifact@v1.0.0
+      uses: actions/upload-artifact@v4
       with:
         name: BepInEx.Debug
         path: bin
