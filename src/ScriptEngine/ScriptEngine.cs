@@ -94,6 +94,7 @@ namespace ScriptEngine
 
             scriptManager = new GameObject($"ScriptEngine_{DateTime.Now.Ticks}");
             DontDestroyOnLoad(scriptManager);
+            scriptManager.hideFlags = HideFlags.HideAndDontSave;
 
             var files = Directory.GetFiles(ScriptDirectory, "*.dll", IncludeSubdirectories.Value ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
             if (files.Length > 0)
