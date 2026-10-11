@@ -2,6 +2,8 @@
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using Common;
+using HarmonyLib;
 using Mono.Cecil;
 using System;
 using System.Collections;
@@ -9,9 +11,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Policy;
 using System.Text;
-using Common;
-using HarmonyLib;
 using UnityEngine;
 
 namespace ScriptEngine
@@ -39,6 +40,7 @@ namespace ScriptEngine
         private FileSystemWatcher fileSystemWatcher;
         private bool shouldReload;
         private float autoReloadTimer;
+        private ScriptEngineResolver currentResolver;
 
         private void Awake()
         {
@@ -99,8 +101,7 @@ namespace ScriptEngine
             var files = Directory.GetFiles(ScriptDirectory, "*.dll", IncludeSubdirectories.Value ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
             if (files.Length > 0)
             {
-                foreach (string path in Directory.GetFiles(ScriptDirectory, "*.dll", IncludeSubdirectories.Value ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly))
-                    LoadDLL(path, scriptManager);
+                LoadDLLs(files, scriptManager);
 
                 if (!QuietMode.Value)
                     Logger.LogMessage("Reloaded all plugins!");
@@ -112,55 +113,93 @@ namespace ScriptEngine
             }
         }
 
-        private void LoadDLL(string path, GameObject obj)
+        private Assembly LoadAssembly(AssemblyDefinition definition)
         {
-            var defaultResolver = new DefaultAssemblyResolver();
-            defaultResolver.AddSearchDirectory(ScriptDirectory);
-            defaultResolver.AddSearchDirectory(Paths.ManagedPath);
-            defaultResolver.AddSearchDirectory(Paths.BepInExAssemblyDirectory);
-
-            if (!QuietMode.Value)
-                Logger.Log(LogLevel.Info, $"Loading plugins from {path}");
-
-            using (var dll = AssemblyDefinition.ReadAssembly(path, new ReaderParameters {
-                AssemblyResolver = defaultResolver,
-                ReadSymbols = true
-            }))
+            if (DumpAssemblies.Value)
             {
-                dll.Name.Name = $"{dll.Name.Name}-{DateTime.Now.Ticks}";
-                Assembly ass;
+                // Dump assemblies & load them from disk
+                if (!Directory.Exists(DumpedAssembliesPath))
+                    Directory.CreateDirectory(DumpedAssembliesPath);
 
-                if (DumpAssemblies.Value)
+                string assemblyDumpPath = Path.Combine(DumpedAssembliesPath, definition.Name.Name + Path.GetExtension(definition.MainModule.Name));
+
+                using (FileStream outFileStream = new FileStream(assemblyDumpPath, FileMode.Create))
                 {
-                    // Dump assembly & load it from disk
-                    if (!Directory.Exists(DumpedAssembliesPath))
-                        Directory.CreateDirectory(DumpedAssembliesPath);
-   
-                    string assemblyDumpPath = Path.Combine(DumpedAssembliesPath, dll.Name.Name + Path.GetExtension(dll.MainModule.Name));
-
-                    using (FileStream outFileStream = new FileStream(assemblyDumpPath, FileMode.Create))
+                    definition.Write(outFileStream, new WriterParameters()
                     {
-                        dll.Write((Stream)outFileStream, new WriterParameters()
-                        {
-                            WriteSymbols = true
-                        });
-                    }
-
-                    ass = Assembly.LoadFile(assemblyDumpPath);
-                    if (!QuietMode.Value)
-                        Logger.Log(LogLevel.Info, $"Loaded dumped Assembly from {assemblyDumpPath}");
-                } else
-                {
-                    // Load from memory
-                    using (var ms = new MemoryStream())
-                    {
-                        dll.Write(ms);
-                        ass = Assembly.Load(ms.ToArray());
-                    }
+                        WriteSymbols = true
+                    });
                 }
 
+                var assembly = Assembly.LoadFile(assemblyDumpPath);
+                if (!QuietMode.Value)
+                    Logger.Log(LogLevel.Info, $"Loaded dumped Assembly from {assemblyDumpPath}");
 
-                foreach (Type type in GetTypesSafe(ass))
+                return assembly;
+            }
+
+            // Otherwise, load in memory.
+            using (var stream = new MemoryStream())
+            {
+                definition.Write(stream);
+                return Assembly.Load(stream.ToArray());
+            }
+        }
+
+        private void LoadDLLs(IEnumerable<string> paths, GameObject obj)
+        {
+            var suffix = $"-{DateTime.Now.Ticks}";
+
+            var resolver = new ScriptEngineResolver(LoadAssembly);
+            resolver.AddSearchDirectory(ScriptDirectory);
+            resolver.AddSearchDirectory(Paths.ManagedPath);
+            resolver.AddSearchDirectory(Paths.BepInExAssemblyDirectory);
+
+            // Load definitions.
+            foreach (var path in paths)
+            {
+                var definition = AssemblyDefinition.ReadAssembly(path, new ReaderParameters
+                {
+                    AssemblyResolver = resolver,
+                    ReadingMode = ReadingMode.Immediate,
+                    ReadSymbols = true
+                });
+
+                var oldName = definition.Name.Name;
+                var newName = $"{oldName}{suffix}";
+                definition.Name.Name = newName;
+                resolver.AddDefinition(oldName, definition, path);
+            }
+
+            // Update references.
+            foreach (var definition in resolver.GetDefinitions())
+            {
+                foreach (var module in definition.Modules)
+                {
+                    foreach (var reference in module.AssemblyReferences)
+                    {
+                        if (resolver.RenameReference(reference.Name, out var renamed))
+                            reference.Name = renamed;
+                    }
+                }
+            }
+
+            // Replace the old resolver.
+            if (currentResolver != null)
+            {
+                AppDomain.CurrentDomain.AssemblyResolve -= currentResolver.LoadHandler;
+                currentResolver.Dispose();
+            }
+            currentResolver = resolver;
+            AppDomain.CurrentDomain.AssemblyResolve += resolver.LoadHandler;
+
+            // Load assemblies.
+            var assemblies = resolver.GetDefinitions().Select(resolver.LoadAssembly).ToList();
+
+            // Reload plugins.
+            foreach (var (definition, assembly) in assemblies)
+            {
+                foreach (var type in GetTypesSafe(assembly))
                 {
                     try
                     {
@@ -175,7 +214,7 @@ namespace ScriptEngine
                         if (Chainloader.PluginInfos.TryGetValue(metadata.GUID, out var existingPluginInfo))
                             throw new InvalidOperationException($"A plugin with GUID {metadata.GUID} is already loaded! ({existingPluginInfo.Metadata.Name} v{existingPluginInfo.Metadata.Version})");
 
-                        var typeDefinition = dll.MainModule.Types.First(x => x.FullName == type.FullName);
+                        var typeDefinition = definition.MainModule.Types.First(x => x.FullName == type.FullName);
                         var pluginInfo = Chainloader.ToPluginInfo(typeDefinition);
 
                         StartCoroutine(DelayAction(() =>
@@ -192,7 +231,7 @@ namespace ScriptEngine
                                 var tv = Traverse.Create(pluginInfo);
                                 tv.Property<BaseUnityPlugin>(nameof(pluginInfo.Instance)).Value = (BaseUnityPlugin)instance;
                                 // Loading the assembly from memory causes Location to be lost
-                                tv.Property<string>(nameof(pluginInfo.Location)).Value = path;
+                                tv.Property<string>(nameof(pluginInfo.Location)).Value = resolver.GetPath(definition);
                             }
                             catch (Exception e)
                             {
@@ -207,16 +246,19 @@ namespace ScriptEngine
                     }
                 }
             }
+
+            // We don't need the definitions anymore.
+            resolver.DisposeDefinitions();
         }
 
         private void StartFileSystemWatcher()
         {
             fileSystemWatcher = new FileSystemWatcher(ScriptDirectory)
             {
-                IncludeSubdirectories = IncludeSubdirectories.Value
+                IncludeSubdirectories = IncludeSubdirectories.Value,
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName,
+                Filter = "*.dll"
             };
-            fileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
-            fileSystemWatcher.Filter = "*.dll";
             fileSystemWatcher.Changed += FileChangedEventHandler;
             fileSystemWatcher.Deleted += FileChangedEventHandler;
             fileSystemWatcher.Created += FileChangedEventHandler;
