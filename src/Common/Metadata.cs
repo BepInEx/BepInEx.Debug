@@ -2,6 +2,6 @@
 {
     internal static class Metadata
     {
-        public const string Version = "11.1";
+        public const string Version = "11.2";
     }
 }
